@@ -1,348 +1,183 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта электросетей</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Интерактивная карта энергосетей</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
     
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <style>
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Arial, sans-serif; }
-        
-        #app-container { display: flex; width: 100%; height: 100vh; position: relative; overflow: hidden; }
-        #map { flex: 1; height: 100%; }
-
-        /* Боковая карточка данных справа */
-        #sidebar {
-            width: 360px;
-            height: 100%;
-            background: #ffffff;
-            box-shadow: -2px 0 12px rgba(0,0,0,0.2);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.25s ease-in-out;
-            position: absolute;
-            right: 0;
-            top: 0;
-            transform: translateX(100%);
-        }
-        #sidebar.active { transform: translateX(0); }
-
-        .sidebar-header {
-            padding: 14px 18px;
-            background: #0f172a;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sidebar-header h3 { margin: 0; font-size: 15px; font-weight: 600; }
-        .close-btn { cursor: pointer; background: none; border: none; color: #cbd5e1; font-size: 22px; line-height: 1; }
-        .close-btn:hover { color: #ffffff; }
-
-        .sidebar-content { padding: 16px; overflow-y: auto; flex: 1; }
-        .attr-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .attr-table th, .attr-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; word-break: break-word; }
-        .attr-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; width: 40%; }
-        .attr-table td { color: #1e293b; }
-
-        /* Стиль для ссылок в карточке */
-        .card-link {
-            display: inline-block;
-            margin-top: 4px;
-            margin-bottom: 4px;
-            padding: 4px 8px;
-            background-color: #2563eb;
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .card-link:hover { background-color: #1d4ed8; }
-
-        /* Панель управления и кнопка скачивания */
-        .controls-panel {
-            position: absolute;
-            top: 12px;
-            left: 60px;
-            z-index: 999;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 6px 10px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .btn-download {
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            padding: 7px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-download:hover { background-color: #0369a1; }
-
-        /* Уменьшенная точка ТП */
-        .tp-double-ring {
-            width: 8px;
-            height: 8px;
-            background-color: #1d4ed8;
-            border: 1.5px solid #ffffff;
-            outline: 1.5px solid #1d4ed8;
-            border-radius: 50%;
-            box-sizing: border-box;
-        }
-
-        /* Стиль тултипа при наведении мыши */
-        .leaflet-tooltip {
-            font-size: 12px;
-            font-weight: 600;
-            background: rgba(15, 23, 42, 0.85);
-            color: #ffffff;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-    </style>
+    /* Стили для всплывающих окон (Popup) */
+    .popup-content {
+      max-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .popup-content h3 {
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #01579b;
+      border-bottom: 2px solid #01579b;
+      padding-bottom: 4px;
+    }
+    .popup-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      margin: 6px 0;
+      display: block;
+    }
+    .popup-info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .popup-info-table td {
+      padding: 3px 0;
+      vertical-align: top;
+    }
+    .popup-info-table td.label {
+      font-weight: bold;
+      color: #555;
+      padding-right: 6px;
+      white-space: nowrap;
+    }
+    .popup-content a {
+      color: #0288d1;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .popup-content a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-<div id="app-container">
-    <div class="controls-panel">
-        <button class="btn-download" onclick="downloadCSV()">📥 Скачать CSV-таблицу</button>
-    </div>
-    
-    <div id="map"></div>
+  <div id="map"></div>
 
-    <!-- Боковая панель -->
-    <div id="sidebar">
-        <div class="sidebar-header">
-            <h3 id="sidebar-title">Карточка объекта</h3>
-            <button class="close-btn" onclick="closeSidebar()">&times;</button>
-        </div>
-        <div class="sidebar-content" id="sidebar-body">
-            <p style="color: #64748b; font-size: 13px;">Выберите объект на карте для просмотра сведений.</p>
-        </div>
-    </div>
-</div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <script>
+    // 1. Инициализация карты (центрируем в районе Шиели)
+    const map = L.map('map').setView([44.18, 66.73], 12);
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-    let geojsonData = null;
-
-    const map = L.map('map', { preferCanvas: true }).setView([44.17, 66.75], 11);
-
-    // Спутник Google (Гибрид)
-    const googleSatLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: 'Google Maps Satellite'
+    // 2. Подключение тайлов (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Схема OSM
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: 'OpenStreetMap'
-    });
+    // 3. Функция формирования контента для Popup
+    function createPopupContent(properties) {
+      let html = `<div class="popup-content">`;
+      
+      if (properties.name) {
+        html += `<h3>${properties.name}</h3>`;
+      }
 
-    const baseMaps = {
-        "🛰️ Google Спутник": googleSatLayer,
-        "🗺️ Схема OSM": osmLayer
-    };
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+      // Вывод табличных специфичных полей, если они заполнены
+      let details = '';
+      if (properties['Ном.мощность, кВА']) details += `<tr><td class="label">Мощность:</td><td>${properties['Ном.мощность, кВА']}</td></tr>`;
+      if (properties['Запитано от фидера']) details += `<tr><td class="label">Фидер:</td><td>${properties['Запитано от фидера']}</td></tr>`;
+      if (properties['Год ввода']) details += `<tr><td class="label">Год ввода:</td><td>${properties['Год ввода']}</td></tr>`;
+      if (properties['На балансе']) details += `<tr><td class="label">На балансе:</td><td>${properties['На балансе']}</td></tr>`;
+      if (properties['Зав/Инв №']) details += `<tr><td class="label">Инв. №:</td><td>${properties['Зав/Инв №']}</td></tr>`;
 
-    // Требования 1, 2, 5: Логика цвета линий по их названиям
-    function getVoltageColor(name) {
-        const text = (name || '').trim().toLowerCase();
+      if (details !== '') {
+        html += `<table class="popup-info-table">${details}</table><hr style="margin:8px 0; border:none; border-top:1px solid #ccc;">`;
+      }
 
-        // 2. Только Л-101 — желтый (ВЛ-110 кВ)
-        if (text.includes('л-101') || text.includes('л 101')) {
-            return '#eab308'; // Желтый
-        }
-
-        // 1. Линии, начинающиеся на "ф." — синий (ВЛ-10 кВ)
-        if (text.startsWith('ф.') || text.startsWith('ф ')) {
-            return '#2563eb'; // Синий
-        }
-
-        // 5. Начинающиеся на "ВЛ-0,4кВ" или "ВЛ 0,4" — зеленый (ВЛ-0,4 кВ)
-        if (text.startsWith('вл-0,4кв') || text.startsWith('вл 0,4') || text.startsWith('вл-0.4кв') || text.startsWith('вл 0.4')) {
-            return '#16a34a'; // Зеленый
-        }
-
-        // Запасная проверка по общим ключевым словам
-        if (text.includes('110кв') || text.includes('110 кв')) return '#eab308';
-        if (text.includes('35кв') || text.includes('35 кв')) return '#dc2626';
-        if (text.includes('10кв') || text.includes('10 кв')) return '#2563eb';
-        if (text.includes('0,4кв') || text.includes('0.4кв')) return '#16a34a';
-
-        return '#dc2626'; // По умолчанию Красный (или остальной стандарт)
-    }
-
-    const tpIcon = L.divIcon({
-        className: 'tp-double-ring',
-        iconSize: [8, 8],
-        iconAnchor: [4, 4]
-    });
-
-    // Список исключаемых ключей (Требование 4: убран Label Scale)
-    const ignoredKeys = new Set([
-        'description', 'styleUrl', 'icon-opacity', 'icon-color', 'icon-scale', 
-        'icon', 'fill-opacity', 'fill', 'stroke-opacity', 'stroke', 
-        'stroke-width', 'styleHash', 'styleMapHash',
-        'label scale', 'label-scale', 'labelscale', 'label_scale'
-    ]);
-
-    function isUsefulProperty(key) {
-        const lowerKey = key.toLowerCase().trim();
-        if (ignoredKeys.has(lowerKey)) return false;
-        if (lowerKey.startsWith('style') || lowerKey.startsWith('icon')) return false;
-        return true;
-    }
-
-    // Вспомогательная функция для генерации кликабельной ссылки
-    function formatValueWithLinks(val) {
-        if (!val) return '';
-        const strVal = String(val);
-
-        // Если это ссылка на картинку или веб-страницу
-        if (strVal.startsWith('http://') || strVal.startsWith('https://')) {
-            // Если ссылок несколько через пробел или перевод строки
-            const urls = strVal.split(/\s+/);
-            return urls.map((url, idx) => 
-                `<a href="${url}" target="_blank" class="card-link">🔗 Открыть ссылку ${urls.length > 1 ? (idx + 1) : ''}</a>`
-            ).join('<br>');
-        }
-        return strVal;
-    }
-
-    fetch('map.geojson')
-        .then(res => res.json())
-        .then(data => {
-            geojsonData = data;
-
-            const geoLayer = L.geoJSON(data, {
-                style: function(feature) {
-                    const name = feature.properties ? (feature.properties.name || feature.properties.Line || '') : '';
-                    return {
-                        color: getVoltageColor(name),
-                        weight: 3.5,
-                        opacity: 0.9
-                    };
-                },
-                pointToLayer: function(feature, latlng) {
-                    return L.marker(latlng, { icon: tpIcon });
-                },
-                onEachFeature: function(feature, layer) {
-                    const objName = feature.properties ? (feature.properties.name || 'Объект без названия') : 'Объект';
-
-                    // Тултип при наведении мыши
-                    layer.bindTooltip(objName, {
-                        sticky: true,
-                        direction: 'top',
-                        offset: [0, -5]
-                    });
-
-                    layer.on('click', function(e) {
-                        L.DomEvent.stopPropagation(e);
-                        openSidebar(feature.properties || {});
-                    });
-                }
-            }).addTo(map);
-
-            if (geoLayer.getBounds().isValid()) {
-                map.fitBounds(geoLayer.getBounds());
-            }
-        })
-        .catch(err => console.error('Ошибка загрузки GeoJSON:', err));
-
-    // Требование 3: Вывод данных объектов и обработка ссылок
-    function openSidebar(props) {
-        const sidebar = document.getElementById('sidebar');
-        const titleEl = document.getElementById('sidebar-title');
-        const bodyEl = document.getElementById('sidebar-body');
-
-        titleEl.innerText = props.name || 'Сведения об объекте';
-        
-        let tableHtml = '<table class="attr-table"><tbody>';
-        let hasData = false;
-
-        for (let key in props) {
-            if (key !== 'name' && isUsefulProperty(key) && props[key] !== undefined && props[key] !== '') {
-                let formattedVal = formatValueWithLinks(props[key]);
-                hasData = true;
-                tableHtml += `<tr><th>${key}</th><td>${formattedVal}</td></tr>`;
-            }
-        }
-        tableHtml += '</tbody></table>';
-
-        bodyEl.innerHTML = hasData ? tableHtml : '<p style="color: #64748b; font-size: 13px;">Для этого объекта нет записанных характеристик.</p>';
-        sidebar.classList.add('active');
-    }
-
-    function closeSidebar() {
-        document.getElementById('sidebar').classList.remove('active');
-    }
-
-    map.on('click', closeSidebar);
-
-    // Выгрузка CSV без Label Scale и служебных полей
-    function downloadCSV() {
-        if (!geojsonData || !geojsonData.features) {
-            alert('Данные карты еще загружаются...');
-            return;
-        }
-
-        const features = geojsonData.features;
-        const validKeys = new Set();
-        validKeys.add('name');
-        
-        features.forEach(f => {
-            if (f.properties) {
-                Object.keys(f.properties).forEach(k => {
-                    if (isUsefulProperty(k)) {
-                        validKeys.add(k);
-                    }
-                });
-            }
+      // Вывод основного описания (parsing HTML/text из description)
+      if (properties.description) {
+        let desc = typeof properties.description === 'object' ? properties.description.value : properties.description;
+        // Превращаем ссылки в кликабельные, если это plain text
+        desc = desc.replace(/(https?:\/\/[^\s<]+)/g, function(url) {
+          // проверяем, не находится ли ссылка уже внутри src= или href=
+          return `<a href="${url}" target="_blank" rel="noopener">Ссылка</a>`;
         });
+        html += `<div>${desc}</div>`;
+      }
 
-        const headers = Array.from(validKeys);
-        let csvContent = '\uFEFF' + headers.join(';') + '\n';
+      // Дополнительные медиа-ссылки (картинки), если есть
+      if (properties.gx_media_links) {
+        const links = properties.gx_media_links.split(' ');
+        links.forEach(url => {
+          if (url.trim() && !html.includes(url.trim())) {
+            html += `<img src="${url.trim()}" alt="Медиа объект">`;
+          }
+        });
+      }
 
-        features.forEach(f => {
-            const props = f.properties || {};
-            const row = headers.map(h => {
-                let val = props[h];
-                if (val === undefined || val === null || typeof val === 'object') {
-                    val = '';
-                } else {
-                    val = String(val).replace(/"/g, '""');
-                }
-                return `"${val}"`;
+      html += `</div>`;
+      return html;
+    }
+
+    // 4. Загрузка GeoJSON с GitHub / локального файла
+    // Замени url на прямую ссылку сырого файла (raw.githubusercontent.com)
+    const geojsonUrl = 'data.geojson'; 
+
+    fetch(geojsonUrl)
+      .then(response => response.json())
+      .then(data => {
+        const geoJsonLayer = L.geoJSON(data, {
+          
+          // Стилизация линий и полигонов на основе свойств из GeoJSON
+          style: function(feature) {
+            const props = feature.properties || {};
+            return {
+              color: props.stroke || '#0288d1',
+              weight: props['stroke-width'] ? parseFloat(props['stroke-width']) : 3,
+              opacity: props['stroke-opacity'] !== undefined ? parseFloat(props['stroke-opacity']) : 1,
+              fillColor: props.fill || '#0288d1',
+              fillOpacity: props['fill-opacity'] !== undefined ? parseFloat(props['fill-opacity']) : 0.4
+            };
+          },
+
+          // Отображение точечных объектов (Point) кастомными маркерами
+          pointToLayer: function(feature, latlng) {
+            return L.circleMarker(latlng, {
+              radius: 6,
+              fillColor: '#01579b',
+              color: '#ffffff',
+              weight: 1.5,
+              opacity: 1,
+              fillOpacity: 0.9
             });
-            csvContent += row.join(';') + '\n';
-        });
+          },
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'power_grid_objects.csv';
-        link.click();
-    }
-</script>
+          // Привязка всплывающих окон
+          onEachFeature: function(feature, layer) {
+            if (feature.properties) {
+              layer.bindPopup(createPopupContent(feature.properties));
+            }
+          }
+        }).addTo(map);
 
+        // Автоматическое подгоны масштаба карты под все объекты
+        map.fitBounds(geoJsonLayer.getBounds());
+      })
+      .catch(err => console.error('Ошибка загрузки GeoJSON:', err));
+  </script>
 </body>
 </html>
