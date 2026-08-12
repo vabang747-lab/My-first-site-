@@ -1,8 +1,108 @@
-Моя первая страница
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта электросетей</title>
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .popup-content {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .popup-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #0044cc;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
 
+<div id="map"></div>
 
-    
-        Привет, мир! 👋
-        Это моя первая веб-страница, написанная и опубликованная через GitHub!
+<script>
+    // Центрируем по дефолту на район Шиели
+    const map = L.map('map').setView([44.17, 66.75], 11);
+
+    // Подложка OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    // Загрузка GeoJSON
+    fetch('./map.geojson')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Не удалось загрузить файл map.geojson (Статус: ' + response.status + ')');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const geoJsonLayer = L.geoJSON(data, {
+                style: function(feature) {
+                    return {
+                        color: "#d90429",   // Цвет ЛЭП/границ
+                        weight: 3,
+                        opacity: 0.85,
+                        fillColor: "#ffb703",
+                        fillOpacity: 0.4
+                    };
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 6,
+                        fillColor: "#023e8a",
+                        color: "#ffffff",
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    let props = feature.properties || {};
+                    let title = props.name || 'Объект';
+                    let content = `<div class="popup-content"><div class="popup-title">${title}</div>`;
+
+                    for (let key in props) {
+                        if (key !== 'name' && props[key]) {
+                            content += `<b>${key}:</b> ${props[key]}<br>`;
+                        }
+                    }
+                    content += `</div>`;
+                    layer.bindPopup(content);
+                }
+            }).addTo(map);
+
+            // Безопасное масштабирование под объекты
+            try {
+                const bounds = geoJsonLayer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds);
+                }
+            } catch (e) {
+                console.warn('Не удалось автоматически рассчитать границы:', e);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+        });
+</script>
+
+</body>
+</html>
