@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Энергоузел — Геоинформационная модель</title>
+<title>Интерактивная карта инженерных коммуникаций «Шиели»</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -29,66 +29,86 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Sego
 
 .topbar {
   position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 10px 14px; background: rgba(255,255,255,0.97);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; background: rgba(255,255,255,0.97);
   border-bottom: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   backdrop-filter: blur(8px);
 }
 .brand {
-  display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px;
-  color: var(--text); white-space: nowrap; margin-right: 6px;
+  display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px;
+  color: var(--text); white-space: nowrap; margin-right: 4px;
 }
-.brand svg { width: 22px; height: 22px; flex-shrink: 0; }
-.search-wrap { flex: 1; min-width: 160px; max-width: 320px; position: relative; }
+.brand svg { width: 20px; height: 20px; flex-shrink: 0; }
+.search-wrap { flex: 1; min-width: 140px; max-width: 280px; position: relative; }
 .search-wrap input {
-  width: 100%; padding: 8px 12px 8px 34px; border: 1px solid var(--border);
+  width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--border);
   border-radius: 8px; font-size: 13px; outline: none; background: #f1f5f9;
-  transition: border-color .15s, background .15s;
 }
 .search-wrap input:focus { border-color: var(--accent); background: #fff; }
 .search-wrap .icon {
-  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
   color: var(--muted); pointer-events: none;
 }
 select.feeder-select {
-  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-  font-size: 13px; background: #f1f5f9; outline: none; min-width: 140px;
-  cursor: pointer; max-width: 220px;
+  padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px;
+  font-size: 12px; background: #f1f5f9; outline: none; min-width: 120px;
+  cursor: pointer; max-width: 200px;
 }
-select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 .btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+  display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px;
   border: 1px solid var(--border); border-radius: 8px; background: #fff;
-  font-size: 13px; cursor: pointer; white-space: nowrap; transition: all .15s;
+  font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s;
   color: var(--text);
 }
 .btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn.active:hover { background: var(--accent-hover); }
-.btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.btn svg { width: 15px; height: 15px; flex-shrink: 0; }
 
-.legend {
-  position: absolute; bottom: 24px; left: 14px; z-index: 1000;
-  background: rgba(255,255,255,0.97); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 14px 16px; min-width: 170px;
-  border: 1px solid var(--border); backdrop-filter: blur(8px);
+/* Left stack: calc + legend */
+.left-stack {
+  position: absolute; bottom: 24px; left: 12px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 10px; max-width: 240px;
 }
-.legend h3 {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+.calc-panel, .legend {
+  background: rgba(255,255,255,0.97); border-radius: var(--radius);
+  box-shadow: var(--shadow); border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.calc-panel { padding: 12px 14px; }
+.calc-panel h3, .legend h3 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--muted); margin-bottom: 10px; font-weight: 600;
 }
+.calc-row { display: flex; gap: 6px; margin-bottom: 7px; align-items: center; }
+.calc-row label { font-size: 12px; color: var(--muted); min-width: 70px; }
+.calc-row input {
+  flex: 1; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; outline: none; background: #f8fafc; width: 0;
+}
+.calc-row input:focus { border-color: var(--accent); background: #fff; }
+.calc-result {
+  margin-top: 8px; padding: 8px 10px; background: #f0f9ff; border-radius: 8px;
+  font-size: 13px; font-weight: 600; color: #0369a1; min-height: 36px;
+}
+.calc-btn {
+  width: 100%; margin-top: 6px; padding: 7px; border: none; border-radius: 7px;
+  background: var(--accent); color: #fff; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+.calc-btn:hover { background: var(--accent-hover); }
+
+.legend { padding: 12px 14px; min-width: 160px; }
 .legend-item {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
-  font-size: 13px; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 9px; margin-bottom: 7px;
+  font-size: 12px; cursor: pointer; user-select: none;
 }
 .legend-item:last-child { margin-bottom: 0; }
 .legend-item input { display: none; }
 .legend-swatch {
-  width: 22px; height: 4px; border-radius: 2px; flex-shrink: 0;
-  transition: opacity .2s;
+  width: 20px; height: 4px; border-radius: 2px; flex-shrink: 0;
 }
 .legend-swatch.tp {
-  width: 10px; height: 10px; border-radius: 50%;
+  width: 9px; height: 9px; border-radius: 50%;
   background: var(--tp); border: 1.5px solid #fff;
   box-shadow: 0 0 0 1px rgba(124,58,237,0.4);
 }
@@ -96,18 +116,18 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 .legend-item input:not(:checked) ~ span { opacity: 0.45; }
 
 .stats {
-  position: absolute; bottom: 24px; right: 14px; z-index: 1000;
+  position: absolute; bottom: 24px; right: 12px; z-index: 1000;
   background: rgba(255,255,255,0.97); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 12px 14px; font-size: 12px;
-  border: 1px solid var(--border); min-width: 140px; backdrop-filter: blur(8px);
+  box-shadow: var(--shadow); padding: 11px 13px; font-size: 11px;
+  border: 1px solid var(--border); min-width: 130px; backdrop-filter: blur(8px);
 }
-.stats .row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+.stats .row { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 3px; }
 .stats .row:last-child { margin-bottom: 0; }
 .stats .label { color: var(--muted); }
 .stats .val { font-weight: 600; }
 
 .side-panel {
-  position: absolute; top: 62px; right: 14px; bottom: 24px; width: 380px;
+  position: absolute; top: 58px; right: 12px; bottom: 24px; width: 370px;
   z-index: 1000; background: var(--panel); border-radius: var(--radius);
   box-shadow: var(--shadow); border: 1px solid var(--border);
   display: flex; flex-direction: column; transform: translateX(120%);
@@ -115,22 +135,22 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 }
 .side-panel.open { transform: translateX(0); }
 .panel-header {
-  padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
   display: flex; align-items: flex-start; gap: 10px;
 }
-.panel-header .title { flex: 1; font-size: 16px; font-weight: 700; line-height: 1.3; word-break: break-word; }
+.panel-header .title { flex: 1; font-size: 15px; font-weight: 700; line-height: 1.3; word-break: break-word; }
 .panel-close {
   width: 28px; height: 28px; border: none; background: #f1f5f9; border-radius: 6px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: var(--muted); flex-shrink: 0; transition: background .15s;
+  color: var(--muted); flex-shrink: 0;
 }
 .panel-close:hover { background: #e2e8f0; }
 .panel-meta {
-  padding: 10px 18px; display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 9px 16px; display: flex; flex-wrap: wrap; gap: 5px;
   border-bottom: 1px solid var(--border);
 }
 .badge {
-  display: inline-flex; align-items: center; padding: 3px 9px;
+  display: inline-flex; align-items: center; padding: 2px 8px;
   border-radius: 20px; font-size: 11px; font-weight: 600;
 }
 .badge.v110 { background: #fef2f2; color: var(--v110); }
@@ -139,41 +159,42 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 .badge.v04 { background: #f0fdf4; color: var(--v04); }
 .badge.type { background: #f5f3ff; color: var(--tp); }
 .badge.other { background: #f1f5f9; color: var(--muted); }
-.panel-body { flex: 1; overflow-y: auto; padding: 14px 18px 20px; }
-.section { margin-bottom: 18px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px 16px 18px; }
+.section { margin-bottom: 16px; }
 .section-title {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--muted); font-weight: 600; margin-bottom: 8px;
+  color: var(--muted); font-weight: 600; margin-bottom: 7px;
 }
 .prop-row {
-  display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
+  display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
 }
 .prop-row:last-child { border-bottom: none; }
-.prop-key { color: var(--muted); min-width: 110px; flex-shrink: 0; }
+.prop-key { color: var(--muted); min-width: 105px; flex-shrink: 0; }
 .prop-val { word-break: break-word; flex: 1; }
 
 .rel-link {
   display: flex; flex-direction: column; gap: 1px;
-  padding: 8px 11px; margin: 4px 0; background: #f8fafc;
-  border-radius: 8px; font-size: 13px; color: var(--text); cursor: pointer;
+  padding: 7px 10px; margin: 3px 0; background: #f8fafc;
+  border-radius: 8px; font-size: 12px; color: var(--text); cursor: pointer;
   border: 1px solid #e2e8f0; transition: all .15s; text-decoration: none;
 }
 .rel-link:hover { background: #eff6ff; border-color: #93c5fd; }
 .rel-link .rel-name { font-weight: 500; color: var(--accent); line-height: 1.3; }
-.rel-link .rel-id { font-size: 11px; color: var(--muted); }
+.rel-link .rel-id { font-size: 10px; color: var(--muted); }
 
-.actions { display: flex; flex-direction: column; gap: 8px; }
+.actions { display: flex; flex-direction: column; gap: 7px; }
 .action-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px; border: 1px solid var(--border); border-radius: 8px;
-  background: #fff; font-size: 13px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px; border: 1px solid var(--border); border-radius: 8px;
+  background: #fff; font-size: 12px; cursor: pointer; transition: all .15s;
 }
 .action-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .action-btn.copied { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+
 .toast {
   position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
-  z-index: 2000; background: #1e293b; color: #fff; padding: 10px 18px;
+  z-index: 2000; background: #1e293b; color: #fff; padding: 10px 16px;
   border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none;
   transition: opacity .25s; white-space: nowrap;
 }
@@ -185,11 +206,6 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
   font-size: 15px; color: var(--muted); text-align: center; padding: 24px;
 }
 .overlay-msg.error { color: #b91c1c; }
-
-.user-loc {
-  width: 16px; height: 16px; background: #3b82f6; border: 3px solid #fff;
-  border-radius: 50%; box-shadow: 0 0 0 2px rgba(59,130,246,0.4), 0 2px 6px rgba(0,0,0,0.3);
-}
 
 .tp-marker {
   width: 8px; height: 8px; border-radius: 50%; background: var(--tp);
@@ -205,20 +221,26 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 }
 
 .leaflet-control-zoom { border: none !important; box-shadow: var(--shadow) !important; border-radius: 8px !important; overflow: hidden; }
-.leaflet-control-zoom a { border: none !important; width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 18px !important; color: var(--text) !important; }
+.leaflet-control-zoom a { border: none !important; width: 32px !important; height: 32px !important; line-height: 32px !important; font-size: 16px !important; color: var(--text) !important; }
 .leaflet-control-attribution { font-size: 10px !important; background: rgba(255,255,255,0.75) !important; }
+.leaflet-tooltip {
+  background: #1e293b !important; color: #fff !important; border: none !important;
+  border-radius: 6px !important; padding: 5px 9px !important; font-size: 12px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important;
+}
+.leaflet-tooltip::before { border-top-color: #1e293b !important; }
 
 @media (max-width: 720px) {
-  .topbar { padding: 8px 10px; gap: 6px; }
+  .topbar { padding: 7px 8px; gap: 5px; }
   .brand span { display: none; }
-  .search-wrap { min-width: 120px; max-width: none; flex: 1 1 100%; order: 10; }
-  select.feeder-select { min-width: 110px; max-width: 150px; }
-  .btn { padding: 7px 9px; font-size: 12px; }
-  .legend { bottom: 12px; left: 10px; padding: 10px 12px; min-width: 140px; }
+  .search-wrap { min-width: 110px; max-width: none; flex: 1 1 100%; order: 10; }
+  select.feeder-select { min-width: 100px; max-width: 140px; }
+  .btn { padding: 6px 8px; font-size: 11px; }
+  .left-stack { bottom: 10px; left: 8px; max-width: 200px; }
   .stats { display: none; }
   .side-panel {
     top: auto; right: 0; left: 0; bottom: 0; width: 100%;
-    max-height: 55vh; border-radius: var(--radius) var(--radius) 0 0;
+    max-height: 52vh; border-radius: var(--radius) var(--radius) 0 0;
     transform: translateY(110%);
   }
   .side-panel.open { transform: translateY(0); }
@@ -231,16 +253,16 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 <div class="topbar">
   <div class="brand">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    <span>Энергоузел</span>
+    <span>Интерактивная карта инженерных коммуникаций «Шиели»</span>
   </div>
   <div class="search-wrap">
-    <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
     <input type="text" id="searchInput" placeholder="Поиск ТП, ВЛ, фидера..." autocomplete="off">
   </div>
   <select class="feeder-select" id="feederSelect">
     <option value="">Все фидеры</option>
   </select>
-  <button class="btn" id="btnReset" title="Сброс фильтров">
+  <button class="btn" id="btnReset" title="Сброс">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     Сброс
   </button>
@@ -248,19 +270,39 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     Спутник
   </button>
-  <button class="btn" id="btnGeo" title="Моё местоположение">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-    Моё местоположение
+  <button class="btn" id="btnDownloadAll" title="Скачать таблицу всех объектов">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Таблица (все)
   </button>
 </div>
 
-<div class="legend" id="legend">
-  <h3>Электрическая сеть</h3>
-  <label class="legend-item"><input type="checkbox" data-filter="v110" checked><span class="legend-swatch" style="background:var(--v110)"></span><span>110 кВ</span></label>
-  <label class="legend-item"><input type="checkbox" data-filter="v35" checked><span class="legend-swatch" style="background:var(--v35)"></span><span>35 кВ</span></label>
-  <label class="legend-item"><input type="checkbox" data-filter="v10" checked><span class="legend-swatch" style="background:var(--v10)"></span><span>10 кВ</span></label>
-  <label class="legend-item"><input type="checkbox" data-filter="v04" checked><span class="legend-swatch" style="background:var(--v04)"></span><span>0,4 кВ</span></label>
-  <label class="legend-item"><input type="checkbox" data-filter="tp" checked><span class="legend-swatch tp"></span><span>ТП</span></label>
+<div class="left-stack">
+  <div class="calc-panel" id="calcPanel">
+    <h3>Расчёт тока нагрузки</h3>
+    <div class="calc-row">
+      <label>P, кВт</label>
+      <input type="number" id="calcP" placeholder="напр. 250" step="any" min="0">
+    </div>
+    <div class="calc-row">
+      <label>U, кВ</label>
+      <input type="number" id="calcU" placeholder="0.4 / 10 / 35" step="any" min="0" value="0.4">
+    </div>
+    <div class="calc-row">
+      <label>cos φ</label>
+      <input type="number" id="calcCos" placeholder="0.8…1" step="0.01" min="0.1" max="1" value="0.9">
+    </div>
+    <button class="calc-btn" id="btnCalc">Рассчитать</button>
+    <div class="calc-result" id="calcResult">I = — А</div>
+  </div>
+
+  <div class="legend" id="legend">
+    <h3>Электрическая сеть</h3>
+    <label class="legend-item"><input type="checkbox" data-filter="v110" checked><span class="legend-swatch" style="background:var(--v110)"></span><span>110 кВ</span></label>
+    <label class="legend-item"><input type="checkbox" data-filter="v35" checked><span class="legend-swatch" style="background:var(--v35)"></span><span>35 кВ</span></label>
+    <label class="legend-item"><input type="checkbox" data-filter="v10" checked><span class="legend-swatch" style="background:var(--v10)"></span><span>10 кВ</span></label>
+    <label class="legend-item"><input type="checkbox" data-filter="v04" checked><span class="legend-swatch" style="background:var(--v04)"></span><span>0,4 кВ</span></label>
+    <label class="legend-item"><input type="checkbox" data-filter="tp" checked><span class="legend-swatch tp"></span><span>ТП</span></label>
+  </div>
 </div>
 
 <div class="stats" id="stats">
@@ -300,11 +342,10 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     isSat: false
   };
 
-  let geojsonData = null;
   let featureIndex = {};
   let allLayers = [];
-  let userMarker = null;
   let map, baseMap, baseSat, layerGroup;
+  let tpPoints = []; // for intersection checks {id, latlng, name}
 
   map = L.map('map', {
     preferCanvas: true,
@@ -318,9 +359,10 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     subdomains: 'abcd'
   }).addTo(map);
 
-  baseSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Esri',
-    maxZoom: 19
+  // Google Satellite
+  baseSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: 'Google',
+    maxZoom: 20
   });
 
   layerGroup = L.layerGroup().addTo(map);
@@ -332,15 +374,36 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     setTimeout(() => t.classList.remove('show'), 2200);
   }
 
+  // ===== Improved voltage detection =====
   function detectVoltage(props, geomType) {
     const name = (props._source_name || props.description || props.описание || '').toLowerCase();
     const cat = (props._object_category || '').toLowerCase();
-    const text = name + ' ' + cat + ' ' + (props['Запитано от фидера'] || '');
+    const text = name + ' ' + cat;
 
-    if (/110\s*кв|вл-110|л-10[0-9]/.test(text)) return 'v110';
-    if (/35\s*кв|пс-35|вл-35|overhead_line_35/.test(text)) return 'v35';
-    if (/0[,\.]4\s*кв|0_4|overhead_line_0_4/.test(text) || cat.includes('0_4')) return 'v04';
-    if (/10\s*кв|overhead_line_10|ктп|тп-10|ктпн|ктпб|фидер/.test(text) || cat.includes('10kv')) return 'v10';
+    // 110 kV
+    if (/110\s*[- ]?кв|вл-110|л-10[0-9]\b/.test(text)) return 'v110';
+
+    // 35 kV — important: catch "35-кв", "35 кв", "35кв", category
+    if (
+      /35\s*[- ]?кв/.test(text) ||
+      /overhead_line_35/.test(cat) ||
+      /\bл-\d+\s*35/.test(text) ||
+      /пс-35|пс 35/.test(text) && !/10\/0[,.]4|0[,.]4/.test(text)
+    ) {
+      // If it's clearly a 35/10 or 35/0.4 substation polygon/point keep as 35 for coloring of area,
+      // but for pure lines with "35-кв" force v35
+      if (geomType === 'LineString' || geomType === 'MultiLineString' || /overhead_line_35/.test(cat) || /35\s*[- ]?кв/.test(name)) {
+        return 'v35';
+      }
+      if (/пс-35|пс 35/.test(text)) return 'v35';
+    }
+
+    // 0.4 kV
+    if (/0[,\.]4\s*[- ]?кв|overhead_line_0_4|0_4kv/.test(text) || cat.includes('0_4')) return 'v04';
+
+    // 10 kV
+    if (/10\s*[- ]?кв|overhead_line_10|ктп|тп-10|ктпн|ктпб|фидер/.test(text) || cat.includes('10kv')) return 'v10';
+
     if (cat.includes('transformer') || geomType === 'Point') return 'v10';
     return 'v10';
   }
@@ -354,78 +417,50 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 
   function extractFeeders(props) {
     const set = new Set();
-    const candidates = [props['Запитано от фидера'], props['Фидер'], props.Фидер];
+    [props['Запитано от фидера'], props['Фидер'], props.Фидер].forEach(c => {
+      if (c && typeof c === 'string' && c.trim()) set.add(c.trim());
+    });
     const desc = (props.description || props.описание || '') + ' ' + (props._source_name || '');
-    const m1 = desc.match(/фидер\s*[№#]?\s*([^\n,;]+)/gi);
-    if (m1) m1.forEach(s => {
+    (desc.match(/фидер\s*[№#]?\s*([^\n,;]+)/gi) || []).forEach(s => {
       const v = s.replace(/фидер\s*[№#]?\s*/i, '').trim();
       if (v && v.length < 60) set.add(v);
     });
-    const m2 = desc.match(/запитано\s+от[:\s]+([^\n]+)/gi);
-    if (m2) m2.forEach(s => {
+    (desc.match(/запитано\s+от[:\s]+([^\n]+)/gi) || []).forEach(s => {
       const v = s.replace(/запитано\s+от[:\s]+/i, '').trim();
       if (v && v.length < 80) set.add(v);
-    });
-    candidates.forEach(c => {
-      if (c && typeof c === 'string' && c.trim()) set.add(c.trim());
     });
     return Array.from(set).filter(Boolean);
   }
 
-  // ===== Улучшенные стили линий =====
   function getLineStyle(voltage, opts = {}) {
     const { selected = false, hovered = false, dimmed = false } = opts;
-
-    const colors = {
-      v110: '#dc2626',
-      v35:  '#ea580c',
-      v10:  '#2563eb',
-      v04:  '#16a34a'
-    };
-    const baseWeights = {
-      v110: 5.5,
-      v35:  4.5,
-      v10:  3.2,
-      v04:  2.2
-    };
-
+    const colors = { v110: '#dc2626', v35: '#ea580c', v10: '#2563eb', v04: '#16a34a' };
+    const baseWeights = { v110: 5.5, v35: 4.8, v10: 3.2, v04: 2.2 };
     let color = colors[voltage] || '#64748b';
     let weight = baseWeights[voltage] || 3;
     let opacity = 0.92;
 
     if (selected) {
-      // Выделенная линия — заметно толще + ярче
-      weight = weight + 4;
+      weight = weight + 4.5;
       opacity = 1;
-      // чуть осветляем цвет
       if (voltage === 'v110') color = '#ef4444';
       if (voltage === 'v35')  color = '#f97316';
       if (voltage === 'v10')  color = '#3b82f6';
       if (voltage === 'v04')  color = '#22c55e';
     } else if (hovered) {
-      weight = weight + 2.5;
+      weight = weight + 2.8;
       opacity = 1;
     }
+    if (dimmed) opacity = 0.18;
 
-    if (dimmed) {
-      opacity = 0.18;
-    }
-
-    return {
-      color,
-      weight,
-      opacity,
-      lineCap: 'round',
-      lineJoin: 'round'
-    };
+    return { color, weight, opacity, lineCap: 'round', lineJoin: 'round' };
   }
 
   function getCenter(geom) {
     if (!geom) return null;
     if (geom.type === 'Point') return L.latLng(geom.coordinates[1], geom.coordinates[0]);
     try {
-      const layer = L.geoJSON(geom);
-      return layer.getBounds().getCenter();
+      return L.geoJSON(geom).getBounds().getCenter();
     } catch (e) { return null; }
   }
 
@@ -446,8 +481,7 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
   function getDisplayName(id) {
     const info = featureIndex[id];
     if (!info) return id;
-    const name = (info.feature.properties._source_name || '').trim();
-    return name || id;
+    return (info.feature.properties._source_name || '').trim() || id;
   }
 
   function matchesFeeder(info) {
@@ -471,6 +505,54 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     return blob.includes(q);
   }
 
+  // Distance from point to segment (meters approx)
+  function distPointToSegment(p, a, b) {
+    const R = 6371000;
+    const toRad = Math.PI / 180;
+    const lat1 = a.lat * toRad, lon1 = a.lng * toRad;
+    const lat2 = b.lat * toRad, lon2 = b.lng * toRad;
+    const latP = p.lat * toRad, lonP = p.lng * toRad;
+
+    // simple equirectangular approximation for short distances
+    const x1 = (lon1 - lonP) * Math.cos((lat1 + latP) / 2);
+    const y1 = lat1 - latP;
+    const x2 = (lon2 - lonP) * Math.cos((lat2 + latP) / 2);
+    const y2 = lat2 - latP;
+    const dx = x2 - x1, dy = y2 - y1;
+    const t = Math.max(0, Math.min(1, ((-x1) * dx + (-y1) * dy) / (dx * dx + dy * dy + 1e-12)));
+    const cx = x1 + t * dx, cy = y1 + t * dy;
+    return Math.sqrt(cx * cx + cy * cy) * R;
+  }
+
+  function findIntersectingTPs(lineFeature, maxDistM = 25) {
+    const geom = lineFeature.geometry;
+    if (!geom || (geom.type !== 'LineString' && geom.type !== 'MultiLineString')) return [];
+
+    let coords = [];
+    if (geom.type === 'LineString') {
+      coords = geom.coordinates.map(c => L.latLng(c[1], c[0]));
+    } else {
+      geom.coordinates.forEach(line => {
+        line.forEach(c => coords.push(L.latLng(c[1], c[0])));
+      });
+    }
+    if (coords.length < 2) return [];
+
+    const result = [];
+    tpPoints.forEach(tp => {
+      let minD = Infinity;
+      for (let i = 0; i < coords.length - 1; i++) {
+        const d = distPointToSegment(tp.latlng, coords[i], coords[i + 1]);
+        if (d < minD) minD = d;
+      }
+      if (minD <= maxDistM) {
+        result.push({ id: tp.id, name: tp.name, distance_m: Math.round(minD * 10) / 10 });
+      }
+    });
+    result.sort((a, b) => a.distance_m - b.distance_m);
+    return result;
+  }
+
   function updateVisibility() {
     allLayers.forEach(entry => {
       const { layer, info } = entry;
@@ -481,10 +563,7 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       } else {
         if (!state.voltageFilters[info.voltage]) visible = false;
       }
-
-      if (visible && state.searchQuery && !matchesSearch(info)) {
-        visible = false;
-      }
+      if (visible && state.searchQuery && !matchesSearch(info)) visible = false;
 
       if (!visible) {
         if (layerGroup.hasLayer(layer)) layerGroup.removeLayer(layer);
@@ -506,21 +585,27 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           }
         }
       } else if (layer.setStyle) {
-        // Для линий (и полигонов)
-        const st = getLineStyle(info.voltage, {
-          selected: isSelected,
-          dimmed: dimmed
-        });
+        const st = getLineStyle(info.voltage, { selected: isSelected, dimmed });
         layer.setStyle(st);
-
-        // Поднимаем выделенную линию наверх
-        if (isSelected && layer.bringToFront) {
-          layer.bringToFront();
-        }
-      } else if (layer.setOpacity) {
-        layer.setOpacity(dimmed ? 0.2 : 1);
+        if (isSelected && layer.bringToFront) layer.bringToFront();
       }
     });
+  }
+
+  function downloadCSV(filename, rows) {
+    const bom = '\uFEFF';
+    const csv = bom + rows.map(r => r.map(cell => {
+      const s = String(cell ?? '');
+      if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function openPanel(info) {
@@ -542,13 +627,9 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 
     const skip = new Set(['_object_category', '_source_name', '_feature_id', '_relations', 'styleUrl', 'gx_media_links']);
     const labels = {
-      'Дата': 'Дата',
-      'описание': 'Описание',
-      'description': 'Описание',
-      'Ном.мощность, кВА': 'Мощность',
-      'Год ввода': 'Год ввода',
-      'Запитано от фидера': 'Запитано от фидера',
-      'На балансе': 'На балансе',
+      'Дата': 'Дата', 'описание': 'Описание', 'description': 'Описание',
+      'Ном.мощность, кВА': 'Мощность', 'Год ввода': 'Год ввода',
+      'Запитано от фидера': 'Запитано от фидера', 'На балансе': 'На балансе',
       'Зав/Инв №': 'Зав/Инв №'
     };
 
@@ -575,10 +656,10 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       body.innerHTML = '';
     }
 
+    // Relations
     const rel = props._relations;
     if (rel && typeof rel === 'object') {
       let relHtml = '';
-
       function makeRelLink(id, extra = '') {
         const name = getDisplayName(id);
         const showId = name !== id;
@@ -587,7 +668,6 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           ${showId ? `<span class="rel-id">${escapeHtml(id)}</span>` : ''}
         </a>`;
       }
-
       if (rel.supplied_by && rel.supplied_by.length) {
         relHtml += `<div class="section-title" style="margin-top:4px">Питается от</div>`;
         rel.supplied_by.forEach(id => { relHtml += makeRelLink(id); });
@@ -613,12 +693,29 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       }
     }
 
+    // Intersecting TPs for lines
+    if (!info.isTP && (info.feature.geometry.type === 'LineString' || info.feature.geometry.type === 'MultiLineString')) {
+      const intersecting = findIntersectingTPs(info.feature, 30);
+      if (intersecting.length) {
+        let ih = `<div class="section-title">Пересекаемые / близкие ТП к линии</div>`;
+        intersecting.slice(0, 40).forEach(t => {
+          ih += `<a class="rel-link" data-id="${escapeHtml(t.id)}">
+            <span class="rel-name">${escapeHtml(t.name)} · ${t.distance_m} м</span>
+            <span class="rel-id">${escapeHtml(t.id)}</span>
+          </a>`;
+        });
+        body.innerHTML += `<div class="section">${ih}</div>`;
+      }
+    }
+
+    // Actions
     body.innerHTML += `
       <div class="section">
         <div class="section-title">Быстрые действия</div>
         <div class="actions">
           <button class="action-btn" id="btnCopyCoords">Копировать координаты</button>
           <button class="action-btn" id="btnCopyData">Скопировать данные объекта</button>
+          <button class="action-btn" id="btnDownloadCard">Скачать таблицу карточки</button>
         </div>
       </div>
     `;
@@ -632,17 +729,14 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           selectFeature(target);
           const c = getCenter(target.feature.geometry);
           if (c) map.flyTo(c, Math.max(map.getZoom(), 16), { duration: 0.6 });
-        } else {
-          showToast('Объект ' + id + ' не найден');
-        }
+        } else showToast('Объект ' + id + ' не найден');
       });
     });
 
     document.getElementById('btnCopyCoords').onclick = () => {
       const c = getCenter(info.feature.geometry);
       if (!c) { showToast('Нет координат'); return; }
-      const txt = c.lat.toFixed(6) + ', ' + c.lng.toFixed(6);
-      copyText(txt).then(() => {
+      copyText(c.lat.toFixed(6) + ', ' + c.lng.toFixed(6)).then(() => {
         showToast('Координаты скопированы');
         const b = document.getElementById('btnCopyCoords');
         b.classList.add('copied'); b.textContent = 'Координаты скопированы';
@@ -669,6 +763,23 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       });
     };
 
+    document.getElementById('btnDownloadCard').onclick = () => {
+      const rows = [['Поле', 'Значение']];
+      rows.push(['Название', props._source_name || '']);
+      rows.push(['ID', props._feature_id || '']);
+      rows.push(['Тип', typeLabel]);
+      rows.push(['Напряжение', vLabel[info.voltage] || '']);
+      Object.keys(props).forEach(k => {
+        if (skip.has(k) || typeof props[k] === 'object') return;
+        const v = props[k];
+        if (v == null || (typeof v === 'string' && !v.trim())) return;
+        rows.push([labels[k] || k, String(v).trim()]);
+      });
+      const fname = (props._source_name || props._feature_id || 'object').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
+      downloadCSV(fname + '.csv', rows);
+      showToast('Таблица карточки скачана');
+    };
+
     panel.classList.add('open');
   }
 
@@ -686,6 +797,13 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     state.selectedId = info.id;
     openPanel(info);
     updateVisibility();
+  }
+
+  function makeTooltipText(props, voltage, isTP) {
+    const vLabel = { v110: '110 кВ', v35: '35 кВ', v10: '10 кВ', v04: '0,4 кВ' };
+    const name = props._source_name || props._feature_id || 'Объект';
+    const type = isTP ? 'ТП' : 'Линия';
+    return `${name}  ·  ${type}  ·  ${vLabel[voltage] || ''}`;
   }
 
   function processFeature(feature, idx) {
@@ -713,6 +831,7 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           iconAnchor: [4, 4]
         });
         layer = L.marker([lat, lng], { icon: icon, interactive: true });
+        layer.bindTooltip(makeTooltipText(props, voltage, true), { direction: 'top', offset: [0, -6], opacity: 0.95 });
         layer.on('click', () => selectFeature(info));
         layer.on('mouseover', () => {
           const el = layer.getElement();
@@ -722,11 +841,13 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           const el = layer.getElement();
           if (el) { const m = el.querySelector('.tp-marker'); if (m) m.classList.remove('hovered'); }
         });
+        tpPoints.push({ id, latlng: L.latLng(lat, lng), name: props._source_name || id });
       } else if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
         layer = L.geoJSON(feature, {
           style: () => getLineStyle(voltage, {}),
           interactive: true
         });
+        layer.bindTooltip(makeTooltipText(props, voltage, false), { sticky: true, direction: 'top', opacity: 0.95 });
         layer.on('click', () => selectFeature(info));
         layer.on('mouseover', function () {
           if (state.selectedId === info.id) return;
@@ -745,6 +866,7 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
           },
           interactive: true
         });
+        layer.bindTooltip(makeTooltipText(props, voltage, tp), { sticky: true, direction: 'top', opacity: 0.95 });
         layer.on('click', () => selectFeature(info));
       } else {
         layer = L.geoJSON(feature, {
@@ -766,10 +888,10 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     layerGroup.addLayer(layer);
   }
 
+  // Load
   fetch('map.geojson')
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(data => {
-      geojsonData = data;
       const features = data.features || [];
       features.forEach((f, i) => processFeature(f, i));
 
@@ -791,20 +913,18 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 
       const feederSet = new Set();
       allLayers.forEach(({ info }) => info.feeders.forEach(f => feederSet.add(f)));
-      const sorted = Array.from(feederSet).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru'));
-      const sel = document.getElementById('feederSelect');
-      sorted.forEach(f => {
+      Array.from(feederSet).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru')).forEach(f => {
         const opt = document.createElement('option');
         opt.value = f;
         opt.textContent = f.length > 40 ? f.slice(0, 38) + '…' : f;
-        sel.appendChild(opt);
+        document.getElementById('feederSelect').appendChild(opt);
       });
 
       if (allLayers.length) {
-        const group = L.featureGroup(allLayers.map(e => e.layer));
-        try { map.fitBounds(group.getBounds().pad(0.08), { maxZoom: 15 }); } catch (e) {}
+        try {
+          map.fitBounds(L.featureGroup(allLayers.map(e => e.layer)).getBounds().pad(0.08), { maxZoom: 15 });
+        } catch (e) {}
       }
-
       document.getElementById('loadingMsg').style.display = 'none';
       updateVisibility();
     })
@@ -815,6 +935,7 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       el.textContent = 'Не удалось загрузить map.geojson. Проверьте, что файл находится рядом с index.html.';
     });
 
+  // UI
   document.querySelectorAll('#legend input[type=checkbox]').forEach(cb => {
     cb.addEventListener('change', () => {
       const key = cb.getAttribute('data-filter');
@@ -861,8 +982,9 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     document.getElementById('searchInput').value = '';
     closePanel();
     if (allLayers.length) {
-      const group = L.featureGroup(allLayers.map(e => e.layer));
-      try { map.fitBounds(group.getBounds().pad(0.08), { maxZoom: 15 }); } catch (e) {}
+      try {
+        map.fitBounds(L.featureGroup(allLayers.map(e => e.layer)).getBounds().pad(0.08), { maxZoom: 15 });
+      } catch (e) {}
     }
     updateVisibility();
   });
@@ -883,31 +1005,43 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     }
   });
 
-  document.getElementById('btnGeo').addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      showToast('Геолокация не поддерживается браузером');
+  // Download all table
+  document.getElementById('btnDownloadAll').addEventListener('click', () => {
+    const headers = ['ID', 'Название', 'Категория', 'Напряжение', 'Тип геометрии', 'Мощность', 'Год ввода', 'Запитано от фидера', 'На балансе', 'Зав/Инв №'];
+    const rows = [headers];
+    const vLabel = { v110: '110 кВ', v35: '35 кВ', v10: '10 кВ', v04: '0,4 кВ' };
+    allLayers.forEach(({ info }) => {
+      const p = info.feature.properties || {};
+      rows.push([
+        p._feature_id || '',
+        p._source_name || '',
+        p._object_category || '',
+        vLabel[info.voltage] || info.voltage,
+        info.feature.geometry ? info.feature.geometry.type : '',
+        p['Ном.мощность, кВА'] || '',
+        p['Год ввода'] || p['Дата'] || '',
+        p['Запитано от фидера'] || '',
+        p['На балансе'] || '',
+        p['Зав/Инв №'] || ''
+      ]);
+    });
+    downloadCSV('shieli_objects.csv', rows);
+    showToast('Таблица всех объектов скачана');
+  });
+
+  // Calculator
+  document.getElementById('btnCalc').addEventListener('click', () => {
+    const P = parseFloat(document.getElementById('calcP').value);
+    const U = parseFloat(document.getElementById('calcU').value);
+    const cos = parseFloat(document.getElementById('calcCos').value);
+    const out = document.getElementById('calcResult');
+    if (!P || !U || !cos || P <= 0 || U <= 0 || cos <= 0) {
+      out.textContent = 'Введите корректные значения';
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        if (userMarker) map.removeLayer(userMarker);
-        userMarker = L.marker([lat, lng], {
-          icon: L.divIcon({
-            className: '',
-            html: '<div class="user-loc"></div>',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          }),
-          zIndexOffset: 1000
-        }).addTo(map);
-        map.flyTo([lat, lng], 16, { duration: 0.7 });
-        showToast('Местоположение определено');
-      },
-      () => showToast('Не удалось определить местоположение. Проверьте разрешение геолокации.'),
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    // 3-phase: I = P / (√3 × U × cosφ)   P in kW, U in kV → I in A
+    const I = P / (Math.sqrt(3) * U * cos);
+    out.innerHTML = `I = <b>${I.toFixed(1)}</b> А<br><span style="font-weight:400;font-size:11px;color:#0369a1">P/(√3·U·cosφ)</span>`;
   });
 
   document.getElementById('panelClose').addEventListener('click', closePanel);
@@ -916,3 +1050,35 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 </script>
 </body>
 </html>
+```
+
+Готово. Кратко, что сделано:
+
+1. **Убрана** кнопка «Моё местоположение».
+
+2. **Улучшена классификация 35 кВ**  
+   Теперь корректно ловятся названия вида `Л-36 35-кВ`, `35-кВ`, `overhead_line_35kv` и т.п.
+
+3. **Скачивание таблиц**  
+   - В верхней панели: **«Таблица (все)»** → CSV всех объектов.  
+   - В карточке объекта: **«Скачать таблицу карточки»** → CSV только выбранного объекта.
+
+4. **Спутник Google**  
+   Используется `mt1.google.com/vt/lyrs=s`.
+
+5. **«Пересекаемые / близкие ТП к линии»**  
+   При выборе линии автоматически ищутся ТП в пределах ~30 м от трассы и показываются в карточке с расстоянием.
+
+6. **Подсказки при наведении**  
+   При наведении на объект появляется tooltip с названием, типом и напряжением (до клика).
+
+7. **Панель «Расчёт тока нагрузки»** (слева над легендой)  
+   Ввод: P (кВт), U (кВ), cos φ → расчёт тока I (А) по формуле трёхфазной сети. Удобно для инженера ПТО.
+
+8. **Название**  
+   Изменено на: **Интерактивная карта инженерных коммуникаций «Шиели»**.
+
+Файл лежит здесь:  
+**`/home/workdir/artifacts/index.html`**
+
+Скопируйте его в корень репозитория рядом с `map.geojson`.
