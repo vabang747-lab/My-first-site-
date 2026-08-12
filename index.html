@@ -8,220 +8,151 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
-  --bg: #f8fafc; --panel: #fff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0;
-  --accent: #3b82f6; --accent-hover: #2563eb;
-  --v110: #dc2626; --v35: #ea580c; --v10: #2563eb; --v04: #16a34a; --tp: #7c3aed;
-  --shadow: 0 4px 20px rgba(0,0,0,0.12); --radius: 12px;
+  --bg:#f8fafc; --panel:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+  --accent:#3b82f6; --accent-hover:#2563eb;
+  --v110:#dc2626; --v35:#ea580c; --v10:#2563eb; --v04:#16a34a; --tp:#7c3aed;
+  --shadow:0 4px 20px rgba(0,0,0,.12); --radius:12px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-#map { position: absolute; inset: 0; z-index: 1; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+#map{position:absolute;inset:0;z-index:1}
 
-.topbar {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  padding: 8px 12px; background: rgba(255,255,255,0.97);
-  border-bottom: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  backdrop-filter: blur(8px);
+.topbar{
+  position:absolute;top:0;left:0;right:0;z-index:1000;
+  display:flex;flex-direction:column;gap:6px;
+  padding:8px 12px;background:rgba(255,255,255,.97);
+  border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.06);
+  backdrop-filter:blur(8px);
 }
-.brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.brand img { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
-.brand-text { display: flex; flex-direction: column; min-width: 0; }
-.brand-title { font-weight: 700; font-size: 13px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
-.brand-sub { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:38px;height:38px;border-radius:50%;flex-shrink:0;object-fit:cover}
+.brand-text{display:flex;flex-direction:column;min-width:0}
+.brand-title{font-weight:700;font-size:14px;line-height:1.3}
+.brand-sub{font-size:11px;color:var(--muted)}
+.topbar-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 
-.search-wrap { flex: 1; min-width: 160px; max-width: 300px; position: relative; }
-.search-wrap input {
-  width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--border);
-  border-radius: 8px; font-size: 13px; outline: none; background: #f1f5f9;
+.search-wrap{flex:1;min-width:150px;max-width:280px;position:relative}
+.search-wrap input{
+  width:100%;padding:7px 10px 7px 32px;border:1px solid var(--border);
+  border-radius:8px;font-size:13px;outline:none;background:#f1f5f9;
 }
-.search-wrap input:focus { border-color: var(--accent); background: #fff; }
-.search-wrap .icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-.suggestions {
-  position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
-  background: #fff; border: 1px solid var(--border); border-radius: 8px;
-  box-shadow: var(--shadow); max-height: 260px; overflow-y: auto; display: none;
+.search-wrap input:focus{border-color:var(--accent);background:#fff}
+.search-wrap .icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.suggestions{
+  position:absolute;top:100%;left:0;right:0;z-index:20;
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  box-shadow:var(--shadow);max-height:260px;overflow-y:auto;display:none;
 }
-.suggestions.open { display: block; }
-.sug-item {
-  padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
-}
-.sug-item:hover, .sug-item.active { background: #eff6ff; }
-.sug-item .sug-name { font-weight: 500; }
-.sug-item .sug-meta { font-size: 11px; color: var(--muted); }
+.suggestions.open{display:block}
+.sug-item{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid #f1f5f9}
+.sug-item:hover,.sug-item.active{background:#eff6ff}
+.sug-item .sug-name{font-weight:500}
+.sug-item .sug-meta{font-size:11px;color:var(--muted)}
 
-select.feeder-select {
-  padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px;
-  font-size: 12px; background: #f1f5f9; outline: none; min-width: 120px; max-width: 200px; cursor: pointer;
+.btn{
+  display:inline-flex;align-items:center;gap:5px;padding:7px 10px;
+  border:1px solid var(--border);border-radius:8px;background:#fff;
+  font-size:12px;cursor:pointer;white-space:nowrap;color:var(--text);
 }
-.btn {
-  display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px;
-  border: 1px solid var(--border); border-radius: 8px; background: #fff;
-  font-size: 12px; cursor: pointer; white-space: nowrap; color: var(--text);
-}
-.btn:hover { background: #f1f5f9; }
-.btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn:hover{background:#f1f5f9}
+.btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-.left-stack {
-  position: absolute; bottom: 20px; left: 12px; z-index: 1000;
-  display: flex; flex-direction: column; gap: 8px; max-width: 230px;
+.left-stack{
+  position:absolute;bottom:20px;left:12px;z-index:1000;
+  display:flex;flex-direction:column;gap:8px;max-width:230px;
 }
-.calc-panel, .legend {
-  background: rgba(255,255,255,0.97); border-radius: var(--radius);
-  box-shadow: var(--shadow); border: 1px solid var(--border); backdrop-filter: blur(8px);
+.calc-panel,.legend{
+  background:rgba(255,255,255,.97);border-radius:var(--radius);
+  box-shadow:var(--shadow);border:1px solid var(--border);backdrop-filter:blur(8px);
 }
-.calc-panel { padding: 11px 12px; }
-.calc-panel h3, .legend h3 {
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--muted); margin-bottom: 8px; font-weight: 600;
+.calc-panel{padding:11px 12px}
+.calc-panel h3,.legend h3{
+  font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);margin-bottom:8px;font-weight:600;
 }
-.calc-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
-.calc-row label { font-size: 11px; color: var(--muted); min-width: 55px; }
-.calc-row input {
-  flex: 1; padding: 4px 7px; border: 1px solid var(--border); border-radius: 6px;
-  font-size: 12px; outline: none; background: #f8fafc; width: 0;
+.calc-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.calc-row label{font-size:11px;color:var(--muted);min-width:55px}
+.calc-row input{
+  flex:1;padding:4px 7px;border:1px solid var(--border);border-radius:6px;
+  font-size:12px;outline:none;background:#f8fafc;width:0;
 }
-.calc-result {
-  margin-top: 6px; padding: 7px 9px; background: #f0f9ff; border-radius: 7px;
-  font-size: 12px; font-weight: 600; color: #0369a1;
-}
-.calc-btn {
-  width: 100%; margin-top: 5px; padding: 6px; border: none; border-radius: 7px;
-  background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
-}
-.legend { padding: 11px 12px; }
-.legend-item {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
-  font-size: 12px; cursor: pointer; user-select: none;
-}
-.legend-item input { display: none; }
-.legend-swatch { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-.legend-swatch.tp {
-  width: 9px; height: 9px; border-radius: 50%; background: var(--tp);
-  border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(124,58,237,0.4);
-}
-.legend-item input:not(:checked) + .legend-swatch { opacity: 0.3; }
-.legend-item input:not(:checked) ~ span { opacity: 0.45; }
+.calc-result{margin-top:6px;padding:7px 9px;background:#f0f9ff;border-radius:7px;font-size:12px;font-weight:600;color:#0369a1}
+.calc-btn{width:100%;margin-top:5px;padding:6px;border:none;border-radius:7px;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+.legend{padding:11px 12px}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;cursor:pointer;user-select:none}
+.legend-item input{display:none}
+.legend-swatch{width:18px;height:3px;border-radius:2px;flex-shrink:0}
+.legend-swatch.tp{width:9px;height:9px;border-radius:50%;background:var(--tp);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(124,58,237,.4)}
+.legend-item input:not(:checked)+.legend-swatch{opacity:.3}
+.legend-item input:not(:checked)~span{opacity:.45}
+.legend-note{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.3}
 
-.stats {
-  position: absolute; bottom: 20px; right: 12px; z-index: 1000;
-  background: rgba(255,255,255,0.97); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 10px 12px; font-size: 11px;
-  border: 1px solid var(--border); min-width: 120px;
+.stats{
+  position:absolute;bottom:20px;right:12px;z-index:1000;
+  background:rgba(255,255,255,.97);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:10px 12px;font-size:11px;
+  border:1px solid var(--border);min-width:120px;
 }
-.stats .row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 2px; }
-.stats .label { color: var(--muted); }
-.stats .val { font-weight: 600; }
+.stats .row{display:flex;justify-content:space-between;gap:12px;margin-bottom:2px}
+.stats .label{color:var(--muted)}
+.stats .val{font-weight:600}
 
-.side-panel {
-  position: absolute; top: 56px; right: 12px; bottom: 20px; width: 370px;
-  z-index: 1000; background: var(--panel); border-radius: var(--radius);
-  box-shadow: var(--shadow); border: 1px solid var(--border);
-  display: flex; flex-direction: column; transform: translateX(120%);
-  transition: transform .28s cubic-bezier(0.4,0,0.2,1); overflow: hidden;
+.side-panel{
+  position:absolute;top:88px;right:12px;bottom:20px;width:370px;
+  z-index:1000;background:var(--panel);border-radius:var(--radius);
+  box-shadow:var(--shadow);border:1px solid var(--border);
+  display:flex;flex-direction:column;transform:translateX(120%);
+  transition:transform .28s cubic-bezier(.4,0,.2,1);overflow:hidden;
 }
-.side-panel.open { transform: translateX(0); }
-.panel-header {
-  padding: 12px 14px 9px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: flex-start; gap: 8px;
-}
-.panel-header .title { flex: 1; font-size: 14px; font-weight: 700; line-height: 1.3; word-break: break-word; }
-.panel-close {
-  width: 26px; height: 26px; border: none; background: #f1f5f9; border-radius: 6px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--muted);
-}
-.panel-meta {
-  padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 5px; border-bottom: 1px solid var(--border);
-}
-.badge {
-  display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
-}
-.badge.v110 { background: #fef2f2; color: var(--v110); }
-.badge.v35 { background: #fff7ed; color: var(--v35); }
-.badge.v10 { background: #eff6ff; color: var(--v10); }
-.badge.v04 { background: #f0fdf4; color: var(--v04); }
-.badge.type { background: #f5f3ff; color: var(--tp); }
-.badge.other { background: #f1f5f9; color: var(--muted); }
-.panel-body { flex: 1; overflow-y: auto; padding: 11px 14px 16px; }
-.section { margin-bottom: 14px; }
-.section-title {
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--muted); font-weight: 600; margin-bottom: 6px;
-}
-.prop-row {
-  display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;
-}
-.prop-key { color: var(--muted); min-width: 100px; flex-shrink: 0; }
-.prop-val { word-break: break-word; flex: 1; }
+.side-panel.open{transform:translateX(0)}
+.panel-header{padding:12px 14px 9px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
+.panel-header .title{flex:1;font-size:14px;font-weight:700;line-height:1.3;word-break:break-word}
+.panel-close{width:26px;height:26px;border:none;background:#f1f5f9;border-radius:6px;cursor:pointer;color:var(--muted)}
+.panel-meta{padding:8px 14px;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border)}
+.badge{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge.v110{background:#fef2f2;color:var(--v110)}
+.badge.v35{background:#fff7ed;color:var(--v35)}
+.badge.v10{background:#eff6ff;color:var(--v10)}
+.badge.v04{background:#f0fdf4;color:var(--v04)}
+.badge.type{background:#f5f3ff;color:var(--tp)}
+.badge.other{background:#f1f5f9;color:var(--muted)}
+.panel-body{flex:1;overflow-y:auto;padding:11px 14px 16px}
+.section{margin-bottom:14px}
+.section-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:6px}
+.prop-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
+.prop-key{color:var(--muted);min-width:100px;flex-shrink:0}
+.prop-val{word-break:break-word;flex:1}
+.rel-link{display:flex;flex-direction:column;gap:1px;padding:7px 10px;margin:3px 0;background:#f8fafc;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #e2e8f0;text-decoration:none;color:var(--text)}
+.rel-link:hover{background:#eff6ff;border-color:#93c5fd}
+.rel-link .rel-name{font-weight:500;color:var(--accent)}
+.rel-link .rel-id{font-size:10px;color:var(--muted)}
+.actions{display:flex;flex-direction:column;gap:6px}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12px;cursor:pointer;text-decoration:none;color:var(--text)}
+.action-btn:hover{background:#f1f5f9}
+.action-btn.copied{background:#ecfdf5;border-color:#6ee7b7;color:#047857}
+.action-btn.link-btn{background:#f0f9ff;border-color:#bae6fd;color:#0369a1}
 
-.rel-link {
-  display: flex; flex-direction: column; gap: 1px;
-  padding: 7px 10px; margin: 3px 0; background: #f8fafc;
-  border-radius: 8px; font-size: 12px; cursor: pointer;
-  border: 1px solid #e2e8f0; text-decoration: none; color: var(--text);
-}
-.rel-link:hover { background: #eff6ff; border-color: #93c5fd; }
-.rel-link .rel-name { font-weight: 500; color: var(--accent); }
-.rel-link .rel-id { font-size: 10px; color: var(--muted); }
+.toast{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:2000;background:#1e293b;color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+.overlay-msg{position:absolute;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(248,250,252,.92);font-size:14px;color:var(--muted);text-align:center;padding:24px}
+.overlay-msg.error{color:#b91c1c}
 
-.actions { display: flex; flex-direction: column; gap: 6px; }
-.action-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px; border: 1px solid var(--border); border-radius: 8px;
-  background: #fff; font-size: 12px; cursor: pointer; text-decoration: none; color: var(--text);
-}
-.action-btn:hover { background: #f1f5f9; }
-.action-btn.copied { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
-.action-btn.link-btn { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+.tp-marker{width:8px;height:8px;border-radius:50%;background:var(--tp);border:1.5px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s;cursor:pointer}
+.tp-marker:hover,.tp-marker.hovered{transform:scale(1.6);box-shadow:0 0 0 3px rgba(124,58,237,.35)}
+.tp-marker.selected{transform:scale(1.9);background:#5b21b6;box-shadow:0 0 0 4px rgba(124,58,237,.5),0 2px 6px rgba(0,0,0,.35)}
 
-.toast {
-  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-  z-index: 2000; background: #1e293b; color: #fff; padding: 9px 14px;
-  border-radius: 8px; font-size: 12px; opacity: 0; pointer-events: none; transition: opacity .25s;
-}
-.toast.show { opacity: 1; }
+.leaflet-control-zoom{border:none!important;box-shadow:var(--shadow)!important;border-radius:8px!important;overflow:hidden}
+.leaflet-control-zoom a{border:none!important;width:30px!important;height:30px!important;line-height:30px!important;color:var(--text)!important}
+.leaflet-tooltip{background:#1e293b!important;color:#fff!important;border:none!important;border-radius:6px!important;padding:5px 9px!important;font-size:11px!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;max-width:280px}
+.leaflet-tooltip::before{border-top-color:#1e293b!important}
 
-.overlay-msg {
-  position: absolute; inset: 0; z-index: 2000; display: flex;
-  align-items: center; justify-content: center; background: rgba(248,250,252,0.92);
-  font-size: 14px; color: var(--muted); text-align: center; padding: 24px;
-}
-.overlay-msg.error { color: #b91c1c; }
-
-.tp-marker {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--tp);
-  border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.35);
-  transition: transform .15s, box-shadow .15s; cursor: pointer;
-}
-.tp-marker:hover, .tp-marker.hovered {
-  transform: scale(1.6); box-shadow: 0 0 0 3px rgba(124,58,237,0.35);
-}
-.tp-marker.selected {
-  transform: scale(1.9); background: #5b21b6;
-  box-shadow: 0 0 0 4px rgba(124,58,237,0.5), 0 2px 6px rgba(0,0,0,0.35);
-}
-
-.leaflet-control-zoom { border: none !important; box-shadow: var(--shadow) !important; border-radius: 8px !important; overflow: hidden; }
-.leaflet-control-zoom a { border: none !important; width: 30px !important; height: 30px !important; line-height: 30px !important; color: var(--text) !important; }
-.leaflet-tooltip {
-  background: #1e293b !important; color: #fff !important; border: none !important;
-  border-radius: 6px !important; padding: 5px 9px !important; font-size: 11px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25) !important; max-width: 280px;
-}
-.leaflet-tooltip::before { border-top-color: #1e293b !important; }
-
-@media (max-width: 800px) {
-  .brand-title { max-width: 160px; font-size: 12px; }
-  .brand-sub { display: none; }
-  .search-wrap { flex: 1 1 100%; order: 10; max-width: none; }
-  .left-stack { max-width: 190px; }
-  .stats { display: none; }
-  .side-panel {
-    top: auto; right: 0; left: 0; bottom: 0; width: 100%; max-height: 50vh;
-    border-radius: var(--radius) var(--radius) 0 0; transform: translateY(110%);
-  }
-  .side-panel.open { transform: translateY(0); }
+@media(max-width:800px){
+  .brand-title{font-size:12px}
+  .search-wrap{flex:1 1 100%;max-width:none}
+  .left-stack{max-width:190px}
+  .stats{display:none}
+  .side-panel{top:auto;right:0;left:0;bottom:0;width:100%;max-height:50vh;border-radius:var(--radius) var(--radius) 0 0;transform:translateY(110%)}
+  .side-panel.open{transform:translateY(0)}
 }
 </style>
 </head>
@@ -236,18 +167,19 @@ select.feeder-select {
       <div class="brand-sub">Сделал Маханов Нурдаулет</div>
     </div>
   </div>
-  <div class="search-wrap">
-    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-    <input type="text" id="searchInput" placeholder="Поиск ТП, ВЛ, фидера..." autocomplete="off">
-    <div class="suggestions" id="suggestions"></div>
+  <div class="topbar-controls">
+    <div class="search-wrap">
+      <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Поиск ТП, ВЛ..." autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <button class="btn" id="btnReset">Сброс</button>
+    <button class="btn" id="btnSat">Спутник</button>
+    <button class="btn" id="btnDownloadAll">Таблица (все)</button>
+    <button class="btn" id="btnShres">На балансе ШРЭС</button>
+    <button class="btn" id="btnGeoSchema">Гео-схема</button>
+    <button class="btn" id="btnOpSchema">По опорная схема</button>
   </div>
-  <select class="feeder-select" id="feederSelect">
-    <option value="">Все фидеры</option>
-  </select>
-  <button class="btn" id="btnReset" title="Сброс">Сброс</button>
-  <button class="btn" id="btnSat">Спутник</button>
-  <button class="btn" id="btnDownloadAll">Таблица (все)</button>
-  <button class="btn" id="btnShres" title="Показать объекты на балансе ШРЭС">На балансе ШРЭС</button>
 </div>
 
 <div class="left-stack">
@@ -264,8 +196,9 @@ select.feeder-select {
     <label class="legend-item"><input type="checkbox" data-filter="v110" checked><span class="legend-swatch" style="background:var(--v110)"></span><span>110 кВ</span></label>
     <label class="legend-item"><input type="checkbox" data-filter="v35" checked><span class="legend-swatch" style="background:var(--v35)"></span><span>35 кВ</span></label>
     <label class="legend-item"><input type="checkbox" data-filter="v10" checked><span class="legend-swatch" style="background:var(--v10)"></span><span>10 кВ</span></label>
-    <label class="legend-item"><input type="checkbox" data-filter="v04" checked><span class="legend-swatch" style="background:var(--v04)"></span><span>0,4 кВ</span></label>
+    <label class="legend-item"><input type="checkbox" data-filter="v04"><span class="legend-swatch" style="background:var(--v04)"></span><span>0,4 кВ (все)</span></label>
     <label class="legend-item"><input type="checkbox" data-filter="tp" checked><span class="legend-swatch tp"></span><span>ТП</span></label>
+    <div class="legend-note">0,4 кВ по умолчанию скрыты. Появляются при выборе ТП.</div>
   </div>
 </div>
 
@@ -296,11 +229,13 @@ select.feeder-select {
 'use strict';
 
 const state = {
-  voltageFilters: { v110:true, v35:true, v10:true, v04:true },
+  voltageFilters: { v110:true, v35:true, v10:true, v04:false },
   tpFilter: true,
-  feederFilter: '',
   searchQuery: '',
-  balanceFilter: '', // 'ШРЭС' or ''
+  balanceFilter: '',
+  schemaFilter: '',
+  forceShowAll04: false,
+  revealed04: new Set(),
   selectedId: null,
   isSat: false
 };
@@ -308,686 +243,509 @@ const state = {
 let featureIndex = {};
 let allLayers = [];
 let tpPoints = [];
-let searchIndex = []; // {id, name, power, text}
+let searchIndex = [];
 let map, baseMap, baseSat, layerGroup;
 
-map = L.map('map', { preferCanvas: true, zoomControl: true }).setView([44.17, 66.75], 12);
+map = L.map('map', { preferCanvas:true, zoomControl:true }).setView([44.17, 66.75], 12);
 baseMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OSM &copy; CARTO', maxZoom: 20, subdomains: 'abcd'
+  attribution:'&copy; OSM &copy; CARTO', maxZoom:20, subdomains:'abcd'
 }).addTo(map);
-baseSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { attribution: 'Google', maxZoom: 20 });
+baseSat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { attribution:'Google', maxZoom:20 });
 layerGroup = L.layerGroup().addTo(map);
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;left:-9999px';
+  document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); return Promise.resolve();
 }
-function escapeHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function copyText(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
-  const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText='position:fixed;left:-9999px';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); } catch(e){}
-  document.body.removeChild(ta); return Promise.resolve();
-}
-function downloadCSV(filename, rows) {
-  const bom = '\uFEFF';
-  const csv = bom + rows.map(r => r.map(cell => {
-    const s = String(cell ?? '');
-    if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-    return s;
-  }).join(';')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-  URL.revokeObjectURL(a.href);
+function downloadCSV(filename, rows){
+  const bom='\uFEFF';
+  const csv=bom+rows.map(r=>r.map(cell=>{ const s=String(cell??''); if(/[;"\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"'; return s; }).join(';')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
 }
 
-function detectVoltage(props, geomType) {
-  const name = (props._source_name || props.description || props.описание || '').toLowerCase();
-  const cat = (props._object_category || '').toLowerCase();
-  const text = name + ' ' + cat;
-  if (/110\s*[- ]?кв|вл-110|л-10[0-9]\b/.test(text)) return 'v110';
-  if (/35\s*[- ]?кв/.test(text) || /overhead_line_35/.test(cat) || (/\bл-\d+/.test(text) && /35/.test(text))) return 'v35';
-  if (/пс-35|пс 35/.test(text) && (geomType === 'Polygon' || geomType === 'Point')) return 'v35';
-  if (/0[,\.]4\s*[- ]?кв|overhead_line_0_4|0_4kv/.test(text) || cat.includes('0_4')) return 'v04';
-  if (/10\s*[- ]?кв|overhead_line_10|ктп|тп-10|ктпн|ктпб|фидер/.test(text) || cat.includes('10kv')) return 'v10';
-  if (cat.includes('transformer') || geomType === 'Point') return 'v10';
+function detectVoltage(props, geomType){
+  const name=(props._source_name||props.description||props.описание||'').toLowerCase();
+  const cat=(props._object_category||'').toLowerCase();
+  const text=name+' '+cat;
+  if(/110\s*[- ]?кв|вл-110|л-10[0-9]\b/.test(text)) return 'v110';
+  if(/35\s*[- ]?кв/.test(text)||/overhead_line_35/.test(cat)||(/\bл-\d+/.test(text)&&/35/.test(text))) return 'v35';
+  if(/пс-35|пс 35/.test(text)&&(geomType==='Polygon'||geomType==='Point')) return 'v35';
+  if(/0[,\.]4\s*[- ]?кв|overhead_line_0_4|0_4kv/.test(text)||cat.includes('0_4')) return 'v04';
+  if(/10\s*[- ]?кв|overhead_line_10|ктп|тп-10|ктпн|ктпб|фидер/.test(text)||cat.includes('10kv')) return 'v10';
+  if(cat.includes('transformer')||geomType==='Point') return 'v10';
   return 'v10';
 }
-function isTP(props, geomType) {
-  if (geomType === 'Point') return true;
-  const cat = (props._object_category || '').toLowerCase();
-  const name = (props._source_name || '').toLowerCase();
-  return cat.includes('transformer') || /ктп|тп-10|ктпн|ктпб/.test(name);
+function isTP(props, geomType){
+  if(geomType==='Point') return true;
+  const cat=(props._object_category||'').toLowerCase();
+  const name=(props._source_name||'').toLowerCase();
+  return cat.includes('transformer')||/ктп|тп-10|ктпн|ктпб/.test(name);
 }
-function extractFeeders(props) {
-  const set = new Set();
-  [props['Запитано от фидера'], props['Фидер']].forEach(c => {
-    if (c && String(c).trim()) set.add(String(c).trim());
-  });
-  const desc = (props.описание || props.description || '') + ' ' + (props._source_name || '');
-  (desc.match(/фидер\s*[№#]?\s*([^\n,;]+)/gi) || []).forEach(s => {
-    const v = s.replace(/фидер\s*[№#]?\s*/i, '').trim();
-    if (v && v.length < 60) set.add(v);
-  });
+function extractFeeders(props){
+  const set=new Set();
+  [props['Запитано от фидера'], props['Фидер']].forEach(c=>{ if(c&&String(c).trim()) set.add(String(c).trim()); });
   return Array.from(set).filter(Boolean);
 }
-function extractLinks(props) {
-  const text = [props.описание, props.description, props._source_name].filter(Boolean).join('\n');
-  const links = [];
-  const re = /(Гео-схема|Однолинейная схема|По опорная схема|Паспорт|Анимация|Версия\s*2\.0|ТБ)\s*:?\s*\n?\s*(https?:\/\/[^\s]+)/gi;
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    links.push({ label: m[1].trim(), url: m[2].trim() });
-  }
-  // any remaining bare urls
-  const urlRe = /https?:\/\/[^\s<>"']+/g;
-  const found = new Set(links.map(l => l.url));
-  let u;
-  while ((u = urlRe.exec(text)) !== null) {
-    if (!found.has(u[0])) {
-      links.push({ label: 'Ссылка', url: u[0] });
-      found.add(u[0]);
-    }
-  }
+function extractLinks(props){
+  const text=[props.описание,props.description,props._source_name].filter(Boolean).join('\n');
+  const links=[]; const found=new Set();
+  const re=/(Гео-схема|Однолинейная схема|По опорная схема|Паспорт|Анимация|Версия\s*2\.0|ТБ)\s*:?\s*\n?\s*(https?:\/\/[^\s]+)/gi;
+  let m; while((m=re.exec(text))!==null){ links.push({label:m[1].trim(),url:m[2].trim()}); found.add(m[2].trim()); }
+  const urlRe=/https?:\/\/[^\s<>"']+/g; let u;
+  while((u=urlRe.exec(text))!==null){ if(!found.has(u[0])){ links.push({label:'Ссылка',url:u[0]}); found.add(u[0]); } }
   return links;
 }
-function getPower(props) {
-  return props['Ном.мощность, кВА'] || props['Ном.мощность'] || '';
+function hasSchema(props, kind){
+  const text=[props.описание,props.description,props._source_name].filter(Boolean).join('\n');
+  if(kind==='geo') return /гео-схема/i.test(text)&&/https?:\/\//i.test(text);
+  if(kind==='opor') return /по\s*опорн/i.test(text)&&/https?:\/\//i.test(text);
+  return false;
 }
-function getLineStyle(voltage, opts = {}) {
-  const { selected=false, hovered=false, dimmed=false } = opts;
-  const colors = { v110:'#dc2626', v35:'#ea580c', v10:'#2563eb', v04:'#16a34a' };
-  const baseW = { v110:5.5, v35:4.8, v10:3.2, v04:2.4 };
-  let color = colors[voltage] || '#64748b';
-  let weight = baseW[voltage] || 3;
-  let opacity = 0.92;
-  if (selected) {
-    weight += 4.5; opacity = 1;
-    if (voltage==='v110') color='#ef4444';
-    if (voltage==='v35') color='#f97316';
-    if (voltage==='v10') color='#3b82f6';
-    if (voltage==='v04') color='#22c55e';
-  } else if (hovered) { weight += 2.5; opacity = 1; }
-  if (dimmed) opacity = 0.15;
-  return { color, weight, opacity, lineCap:'round', lineJoin:'round' };
+function getPower(props){ return props['Ном.мощность, кВА']||props['Ном.мощность']||''; }
+function getLineStyle(voltage, opts={}){
+  const {selected=false,hovered=false,dimmed=false}=opts;
+  const colors={v110:'#dc2626',v35:'#ea580c',v10:'#2563eb',v04:'#16a34a'};
+  const baseW={v110:5.5,v35:4.8,v10:3.2,v04:2.6};
+  let color=colors[voltage]||'#64748b', weight=baseW[voltage]||3, opacity=.92;
+  if(selected){ weight+=4.5; opacity=1; if(voltage==='v110')color='#ef4444'; if(voltage==='v35')color='#f97316'; if(voltage==='v10')color='#3b82f6'; if(voltage==='v04')color='#22c55e'; }
+  else if(hovered){ weight+=2.5; opacity=1; }
+  if(dimmed) opacity=.15;
+  return {color,weight,opacity,lineCap:'round',lineJoin:'round'};
 }
-function getCenter(geom) {
-  if (!geom) return null;
-  if (geom.type === 'Point') return L.latLng(geom.coordinates[1], geom.coordinates[0]);
-  try { return L.geoJSON(geom).getBounds().getCenter(); } catch(e) { return null; }
+function getCenter(geom){
+  if(!geom) return null;
+  if(geom.type==='Point') return L.latLng(geom.coordinates[1],geom.coordinates[0]);
+  try{ return L.geoJSON(geom).getBounds().getCenter(); }catch(e){ return null; }
 }
-function getDisplayName(id) {
-  const info = featureIndex[id];
-  if (!info) return id;
-  return (info.feature.properties._source_name || '').trim() || id;
-}
-function matchesFeeder(info) {
-  if (!state.feederFilter) return true;
-  const f = state.feederFilter.toLowerCase();
-  // exact-ish match on extracted feeders
-  if (info.feeders.some(x => x.toLowerCase() === f || x.toLowerCase().includes(f) || f.includes(x.toLowerCase()))) return true;
-  // also check properties
-  const p = info.feature.properties || {};
-  const blob = [(p['Запитано от фидера']||''), (p._source_name||''), (p.описание||'')].join(' ').toLowerCase();
-  return blob.includes(f);
-}
-function matchesBalance(info) {
-  if (!state.balanceFilter) return true;
-  const bal = (info.feature.properties['На балансе'] || '').toString().trim();
-  return bal.toLowerCase().includes(state.balanceFilter.toLowerCase());
-}
-function matchesSearch(info) {
-  if (!state.searchQuery) return true;
-  const q = state.searchQuery.toLowerCase();
-  return (info.searchText || '').includes(q);
-}
+function getDisplayName(id){ const info=featureIndex[id]; if(!info) return id; return (info.feature.properties._source_name||'').trim()||id; }
+function matchesBalance(info){ if(!state.balanceFilter) return true; return (info.feature.properties['На балансе']||'').toString().toLowerCase().includes(state.balanceFilter.toLowerCase()); }
+function matchesSearch(info){ if(!state.searchQuery) return true; return (info.searchText||'').includes(state.searchQuery.toLowerCase()); }
 
-function distPointToSegment(p, a, b) {
-  const R = 6371000, toRad = Math.PI/180;
-  const lat1=a.lat*toRad, lon1=a.lng*toRad, lat2=b.lat*toRad, lon2=b.lng*toRad, latP=p.lat*toRad, lonP=p.lng*toRad;
+function distPointToSegment(p,a,b){
+  const R=6371000, toRad=Math.PI/180;
+  const lat1=a.lat*toRad,lon1=a.lng*toRad,lat2=b.lat*toRad,lon2=b.lng*toRad,latP=p.lat*toRad,lonP=p.lng*toRad;
   const x1=(lon1-lonP)*Math.cos((lat1+latP)/2), y1=lat1-latP;
   const x2=(lon2-lonP)*Math.cos((lat2+latP)/2), y2=lat2-latP;
   const dx=x2-x1, dy=y2-y1;
-  const t=Math.max(0, Math.min(1, ((-x1)*dx+(-y1)*dy)/(dx*dx+dy*dy+1e-12)));
+  const t=Math.max(0,Math.min(1,((-x1)*dx+(-y1)*dy)/(dx*dx+dy*dy+1e-12)));
   const cx=x1+t*dx, cy=y1+t*dy;
   return Math.sqrt(cx*cx+cy*cy)*R;
 }
-function findNearbyTPs(feature, maxDistM) {
-  const geom = feature.geometry;
-  if (!geom) return [];
-  let coords = [];
-  if (geom.type === 'LineString') coords = geom.coordinates.map(c => L.latLng(c[1],c[0]));
-  else if (geom.type === 'MultiLineString') geom.coordinates.forEach(l => l.forEach(c => coords.push(L.latLng(c[1],c[0]))));
-  else if (geom.type === 'Polygon') coords = geom.coordinates[0].map(c => L.latLng(c[1],c[0]));
-  else if (geom.type === 'MultiPolygon') geom.coordinates.forEach(p => p[0].forEach(c => coords.push(L.latLng(c[1],c[0]))));
-  else if (geom.type === 'Point') {
-    const pt = L.latLng(geom.coordinates[1], geom.coordinates[0]);
-    return tpPoints.filter(tp => tp.latlng.distanceTo(pt) <= maxDistM)
-      .map(tp => ({ id: tp.id, name: tp.name, distance_m: Math.round(tp.latlng.distanceTo(pt)*10)/10 }))
+function findNearbyTPs(feature, maxDistM){
+  const geom=feature.geometry; if(!geom) return [];
+  let coords=[];
+  if(geom.type==='LineString') coords=geom.coordinates.map(c=>L.latLng(c[1],c[0]));
+  else if(geom.type==='MultiLineString') geom.coordinates.forEach(l=>l.forEach(c=>coords.push(L.latLng(c[1],c[0]))));
+  else if(geom.type==='Polygon') coords=geom.coordinates[0].map(c=>L.latLng(c[1],c[0]));
+  else if(geom.type==='MultiPolygon') geom.coordinates.forEach(p=>p[0].forEach(c=>coords.push(L.latLng(c[1],c[0]))));
+  else if(geom.type==='Point'){
+    const pt=L.latLng(geom.coordinates[1],geom.coordinates[0]);
+    return tpPoints.filter(tp=>tp.latlng.distanceTo(pt)<=maxDistM)
+      .map(tp=>({id:tp.id,name:tp.name,distance_m:Math.round(tp.latlng.distanceTo(pt)*10)/10}))
       .sort((a,b)=>a.distance_m-b.distance_m);
   }
-  if (coords.length < 2) return [];
-  const res = [];
-  tpPoints.forEach(tp => {
-    let minD = Infinity;
-    for (let i=0;i<coords.length-1;i++) {
-      const d = distPointToSegment(tp.latlng, coords[i], coords[i+1]);
-      if (d < minD) minD = d;
-    }
-    if (minD <= maxDistM) res.push({ id: tp.id, name: tp.name, distance_m: Math.round(minD*10)/10 });
+  if(coords.length<2) return [];
+  const res=[];
+  tpPoints.forEach(tp=>{
+    let minD=Infinity;
+    for(let i=0;i<coords.length-1;i++){ const d=distPointToSegment(tp.latlng,coords[i],coords[i+1]); if(d<minD) minD=d; }
+    if(minD<=maxDistM) res.push({id:tp.id,name:tp.name,distance_m:Math.round(minD*10)/10});
   });
   res.sort((a,b)=>a.distance_m-b.distance_m);
   return res;
 }
 
-function updateVisibility() {
-  allLayers.forEach(({ layer, info }) => {
-    let visible = true;
-    if (info.isTP) { if (!state.tpFilter) visible = false; }
-    else { if (!state.voltageFilters[info.voltage]) visible = false; }
-    if (visible && state.searchQuery && !matchesSearch(info)) visible = false;
-    if (visible && !matchesBalance(info)) visible = false;
-
-    if (!visible) {
-      if (layerGroup.hasLayer(layer)) layerGroup.removeLayer(layer);
-      return;
+function updateVisibility(){
+  allLayers.forEach(({layer,info})=>{
+    let visible=true;
+    if(info.isTP){
+      if(!state.tpFilter) visible=false;
+    } else if(info.voltage==='v04'){
+      // hidden unless revealed by TP or user force-shows all
+      if(state.revealed04.has(info.id)) visible=true;
+      else if(state.forceShowAll04 && state.voltageFilters.v04) visible=true;
+      else visible=false;
+    } else {
+      if(!state.voltageFilters[info.voltage]) visible=false;
     }
-    if (!layerGroup.hasLayer(layer)) layerGroup.addLayer(layer);
+    if(visible && state.searchQuery && !matchesSearch(info)) visible=false;
+    if(visible && !matchesBalance(info)) visible=false;
+    if(visible && state.schemaFilter==='geo' && !info.hasGeo) visible=false;
+    if(visible && state.schemaFilter==='opor' && !info.hasOpor) visible=false;
 
-    const isSelected = state.selectedId === info.id;
-    const feederMatch = matchesFeeder(info);
-    const dimmed = state.feederFilter && !feederMatch;
+    if(!visible){ if(layerGroup.hasLayer(layer)) layerGroup.removeLayer(layer); return; }
+    if(!layerGroup.hasLayer(layer)) layerGroup.addLayer(layer);
 
-    if (info.isTP) {
-      const el = layer.getElement && layer.getElement();
-      if (el) {
-        const m = el.querySelector('.tp-marker');
-        if (m) {
-          m.style.opacity = dimmed ? 0.15 : 1;
-          m.classList.toggle('selected', !!isSelected);
-        }
-      }
-      if (isSelected && layer.setZIndexOffset) layer.setZIndexOffset(1000);
-    } else if (layer.setStyle) {
-      const st = getLineStyle(info.voltage, { selected: isSelected, dimmed });
-      // polygons
-      if (info.feature.geometry && (info.feature.geometry.type === 'Polygon' || info.feature.geometry.type === 'MultiPolygon')) {
-        st.fillOpacity = isSelected ? 0.35 : (dimmed ? 0.05 : 0.15);
-        st.weight = isSelected ? 4 : 2;
+    const isSelected=state.selectedId===info.id;
+    const isRevealed04=info.voltage==='v04' && state.revealed04.has(info.id);
+
+    if(info.isTP){
+      const el=layer.getElement&&layer.getElement();
+      if(el){ const m=el.querySelector('.tp-marker'); if(m){ m.style.opacity=1; m.classList.toggle('selected',!!isSelected); } }
+      if(isSelected && layer.setZIndexOffset) layer.setZIndexOffset(1000);
+    } else if(layer.setStyle){
+      const st=getLineStyle(info.voltage,{selected:isSelected||isRevealed04});
+      if(isRevealed04 && !isSelected){ st.weight=(st.weight||3)+3; st.opacity=1; st.color='#16a34a'; }
+      if(info.feature.geometry && (info.feature.geometry.type==='Polygon'||info.feature.geometry.type==='MultiPolygon')){
+        st.fillOpacity=isSelected?0.35:0.15; st.weight=isSelected?4:2;
       }
       layer.setStyle(st);
-      if (isSelected && layer.bringToFront) layer.bringToFront();
+      if((isSelected||isRevealed04) && layer.bringToFront) layer.bringToFront();
     }
   });
 }
 
-function selectFeature(info) {
-  state.selectedId = info.id;
+function selectFeature(info){
+  state.selectedId=info.id;
+  state.revealed04.clear();
+
+  if(info.isTP){
+    const pt=getCenter(info.feature.geometry);
+    if(pt){
+      const candidates=[];
+      allLayers.forEach(({info:li})=>{
+        if(li.voltage!=='v04' || !li.feature.geometry) return;
+        const g=li.feature.geometry;
+        let coords=[];
+        if(g.type==='LineString') coords=g.coordinates.map(c=>L.latLng(c[1],c[0]));
+        else if(g.type==='MultiLineString') g.coordinates.forEach(line=>line.forEach(c=>coords.push(L.latLng(c[1],c[0]))));
+        if(coords.length<2) return;
+        let minD=Infinity;
+        for(let i=0;i<coords.length-1;i++){ const d=distPointToSegment(pt,coords[i],coords[i+1]); if(d<minD) minD=d; }
+        minD=Math.min(minD, pt.distanceTo(coords[0]), pt.distanceTo(coords[coords.length-1]));
+        if(minD<=50) candidates.push({id:li.id,d:minD});
+      });
+      candidates.sort((a,b)=>a.d-b.d);
+      // typically one outgoing 0.4 line per TP
+      if(candidates.length){
+        const best=candidates[0].d;
+        candidates.filter(c=>c.d<=best+15).slice(0,4).forEach(c=>state.revealed04.add(c.id));
+      }
+    }
+  }
+
   openPanel(info);
   updateVisibility();
-  // force highlight after panel open
-  setTimeout(() => {
-    const entry = allLayers.find(e => e.info.id === info.id);
-    if (!entry) return;
-    const { layer } = entry;
-    if (info.isTP) {
-      const el = layer.getElement && layer.getElement();
-      if (el) {
-        const m = el.querySelector('.tp-marker');
-        if (m) m.classList.add('selected');
-      }
-      if (layer.setZIndexOffset) layer.setZIndexOffset(1000);
-    } else if (layer.setStyle) {
-      const st = getLineStyle(info.voltage, { selected: true });
-      if (info.feature.geometry && (info.feature.geometry.type==='Polygon'||info.feature.geometry.type==='MultiPolygon')) {
-        st.fillOpacity = 0.35; st.weight = 4;
-      }
-      layer.setStyle(st);
-      if (layer.bringToFront) layer.bringToFront();
+
+  setTimeout(()=>{
+    const entry=allLayers.find(e=>e.info.id===info.id);
+    if(!entry) return;
+    const {layer}=entry;
+    if(info.isTP){
+      const el=layer.getElement&&layer.getElement();
+      if(el){ const m=el.querySelector('.tp-marker'); if(m) m.classList.add('selected'); }
+      if(layer.setZIndexOffset) layer.setZIndexOffset(1000);
+    } else if(layer.setStyle){
+      const st=getLineStyle(info.voltage,{selected:true});
+      if(info.feature.geometry&&(info.feature.geometry.type==='Polygon'||info.feature.geometry.type==='MultiPolygon')){ st.fillOpacity=0.35; st.weight=4; }
+      layer.setStyle(st); if(layer.bringToFront) layer.bringToFront();
     }
-  }, 50);
+    // animate revealed 0.4
+    state.revealed04.forEach(rid=>{
+      const re=allLayers.find(e=>e.info.id===rid);
+      if(re&&re.layer&&re.layer.setStyle){
+        re.layer.setStyle(getLineStyle('v04',{selected:true}));
+        if(re.layer.bringToFront) re.layer.bringToFront();
+      }
+    });
+  },40);
 }
 
-function openPanel(info) {
-  const props = info.feature.properties || {};
-  const title = document.getElementById('panelTitle');
-  const meta = document.getElementById('panelMeta');
-  const body = document.getElementById('panelBody');
-  const panel = document.getElementById('sidePanel');
-
-  title.textContent = props._source_name || props._feature_id || 'Объект';
-  const vLabel = { v110:'110 кВ', v35:'35 кВ', v10:'10 кВ', v04:'0,4 кВ' };
-  const typeLabel = info.isTP ? 'ТП' : (info.feature.geometry && (info.feature.geometry.type==='Polygon'||info.feature.geometry.type==='MultiPolygon') ? 'Площадной объект' : 'Линия');
-  meta.innerHTML = `
+function openPanel(info){
+  const props=info.feature.properties||{};
+  document.getElementById('panelTitle').textContent=props._source_name||props._feature_id||'Объект';
+  const vLabel={v110:'110 кВ',v35:'35 кВ',v10:'10 кВ',v04:'0,4 кВ'};
+  const typeLabel=info.isTP?'ТП':(info.feature.geometry&&(info.feature.geometry.type==='Polygon'||info.feature.geometry.type==='MultiPolygon')?'Площадной объект':'Линия');
+  document.getElementById('panelMeta').innerHTML=`
     <span class="badge type">${typeLabel}</span>
     <span class="badge ${info.voltage}">${vLabel[info.voltage]||''}</span>
-    ${props._feature_id ? `<span class="badge other">${props._feature_id}</span>` : ''}
-  `;
+    ${props._feature_id?`<span class="badge other">${props._feature_id}</span>`:''}`;
 
-  // Prefer описание over description (description often duplicates)
-  const skip = new Set(['_object_category','_source_name','_feature_id','_relations','styleUrl','gx_media_links','description']);
-  const labels = {
-    'Дата':'Дата', 'описание':'Описание',
-    'Ном.мощность, кВА':'Мощность', 'Год ввода':'Год ввода',
-    'Запитано от фидера':'Запитано от фидера', 'На балансе':'На балансе',
-    'Зав/Инв №':'Зав/Инв №', 'Протяженность:':'Протяжённость', 'Инвентарный №:':'Инвентарный №'
-  };
-
-  let html = '';
-  const shown = new Set();
-  const order = ['Ном.мощность, кВА','Год ввода','Запитано от фидера','На балансе','Зав/Инв №','Дата','описание','Протяженность:','Инвентарный №:'];
-  order.forEach(k => {
-    if (props[k] != null && String(props[k]).trim() && !shown.has(k)) {
+  const skip=new Set(['_object_category','_source_name','_feature_id','_relations','styleUrl','gx_media_links','description']);
+  const labels={'Дата':'Дата','описание':'Описание','Ном.мощность, кВА':'Мощность','Год ввода':'Год ввода','Запитано от фидера':'Запитано от фидера','На балансе':'На балансе','Зав/Инв №':'Зав/Инв №','Протяженность:':'Протяжённость','Инвентарный №:':'Инвентарный №'};
+  let html=''; const shown=new Set();
+  const order=['Ном.мощность, кВА','Год ввода','Запитано от фидера','На балансе','Зав/Инв №','Дата','описание','Протяженность:','Инвентарный №:'];
+  order.forEach(k=>{
+    if(props[k]!=null&&String(props[k]).trim()&&!shown.has(k)){
       shown.add(k);
-      // strip raw urls from description text for cleaner display (links go to buttons)
-      let val = String(props[k]).trim();
-      if (k === 'описание') val = val.replace(/https?:\/\/[^\s]+/g, '').replace(/\n{3,}/g, '\n\n').trim();
-      if (!val) return;
-      html += `<div class="prop-row"><span class="prop-key">${labels[k]||k}</span><span class="prop-val">${escapeHtml(val)}</span></div>`;
+      let val=String(props[k]).trim();
+      if(k==='описание') val=val.replace(/https?:\/\/[^\s]+/g,'').replace(/\n{3,}/g,'\n\n').trim();
+      if(!val) return;
+      html+=`<div class="prop-row"><span class="prop-key">${labels[k]||k}</span><span class="prop-val">${escapeHtml(val)}</span></div>`;
     }
   });
-  Object.keys(props).forEach(k => {
-    if (skip.has(k) || shown.has(k)) return;
-    const v = props[k];
-    if (v == null || typeof v === 'object' || (typeof v === 'string' && !v.trim())) return;
+  Object.keys(props).forEach(k=>{
+    if(skip.has(k)||shown.has(k)) return;
+    const v=props[k]; if(v==null||typeof v==='object'||(typeof v==='string'&&!v.trim())) return;
     shown.add(k);
-    html += `<div class="prop-row"><span class="prop-key">${escapeHtml(labels[k]||k)}</span><span class="prop-val">${escapeHtml(String(v))}</span></div>`;
+    html+=`<div class="prop-row"><span class="prop-key">${escapeHtml(labels[k]||k)}</span><span class="prop-val">${escapeHtml(String(v))}</span></div>`;
   });
-  if (html) body.innerHTML = `<div class="section"><div class="section-title">Характеристики</div>${html}</div>`;
-  else body.innerHTML = '';
+  const body=document.getElementById('panelBody');
+  body.innerHTML=html?`<div class="section"><div class="section-title">Характеристики</div>${html}</div>`:'';
 
-  // Relations
-  const rel = props._relations;
-  if (rel && typeof rel === 'object') {
-    let relHtml = '';
-    function makeRel(id, extra='') {
-      const name = getDisplayName(id);
-      return `<a class="rel-link" data-id="${escapeHtml(id)}">
-        <span class="rel-name">${escapeHtml(name)}${extra}</span>
-        <span class="rel-id">${escapeHtml(id)}</span>
-      </a>`;
-    }
-    if (rel.supplied_by && rel.supplied_by.length) {
-      relHtml += `<div class="section-title">Питается от</div>`;
-      rel.supplied_by.forEach(id => relHtml += makeRel(id));
-    }
-    if (rel.supplies && rel.supplies.length) {
-      relHtml += `<div class="section-title" style="margin-top:8px">Питает</div>`;
-      rel.supplies.forEach(id => relHtml += makeRel(id));
-    }
-    if (rel.connected_to && rel.connected_to.length) {
-      relHtml += `<div class="section-title" style="margin-top:8px">Связанные объекты</div>`;
-      rel.connected_to.forEach(id => relHtml += makeRel(id));
-    }
-    if (rel.spatial_candidates && rel.spatial_candidates.length) {
-      relHtml += `<div class="section-title" style="margin-top:8px">Близкие объекты</div>`;
-      rel.spatial_candidates.forEach(c => {
-        const id = c.feature_id || c;
-        const dist = c.distance_m != null ? ` · ${Number(c.distance_m).toFixed(1)} м` : '';
-        relHtml += makeRel(id, dist);
-      });
-    }
-    if (relHtml) body.innerHTML += `<div class="section"><div class="section-title">Связи</div>${relHtml}</div>`;
+  const rel=props._relations;
+  if(rel&&typeof rel==='object'){
+    let relHtml='';
+    function makeRel(id,extra=''){ const name=getDisplayName(id); return `<a class="rel-link" data-id="${escapeHtml(id)}"><span class="rel-name">${escapeHtml(name)}${extra}</span><span class="rel-id">${escapeHtml(id)}</span></a>`; }
+    if(rel.supplied_by&&rel.supplied_by.length){ relHtml+=`<div class="section-title">Питается от</div>`; rel.supplied_by.forEach(id=>relHtml+=makeRel(id)); }
+    if(rel.supplies&&rel.supplies.length){ relHtml+=`<div class="section-title" style="margin-top:8px">Питает</div>`; rel.supplies.forEach(id=>relHtml+=makeRel(id)); }
+    if(rel.connected_to&&rel.connected_to.length){ relHtml+=`<div class="section-title" style="margin-top:8px">Связанные объекты</div>`; rel.connected_to.forEach(id=>relHtml+=makeRel(id)); }
+    if(rel.spatial_candidates&&rel.spatial_candidates.length){ relHtml+=`<div class="section-title" style="margin-top:8px">Близкие объекты</div>`; rel.spatial_candidates.forEach(c=>{ const id=c.feature_id||c; const dist=c.distance_m!=null?` · ${Number(c.distance_m).toFixed(1)} м`:''; relHtml+=makeRel(id,dist); }); }
+    if(relHtml) body.innerHTML+=`<div class="section"><div class="section-title">Связи</div>${relHtml}</div>`;
   }
 
-  // Nearby / intersecting TPs for lines and polygons
-  const gtype = info.feature.geometry && info.feature.geometry.type;
-  if (gtype === 'LineString' || gtype === 'MultiLineString' || gtype === 'Polygon' || gtype === 'MultiPolygon') {
-    const is04 = info.voltage === 'v04';
-    const nearby = findNearbyTPs(info.feature, is04 ? 40 : 30);
-    if (nearby.length) {
-      let title = is04 ? 'ТП, от которой выходит линия 0,4 кВ' : 'Пересекаемые / близкие ТП';
-      // for 0.4 usually only one
-      const list = is04 ? nearby.slice(0, 3) : nearby.slice(0, 40);
-      let ih = `<div class="section-title">${title}</div>`;
-      list.forEach(t => {
-        ih += `<a class="rel-link" data-id="${escapeHtml(t.id)}">
-          <span class="rel-name">${escapeHtml(t.name)} · ${t.distance_m} м</span>
-          <span class="rel-id">${escapeHtml(t.id)}</span>
-        </a>`;
-      });
-      body.innerHTML += `<div class="section">${ih}</div>`;
+  const gtype=info.feature.geometry&&info.feature.geometry.type;
+  if(gtype==='LineString'||gtype==='MultiLineString'||gtype==='Polygon'||gtype==='MultiPolygon'){
+    const is04=info.voltage==='v04';
+    const nearby=findNearbyTPs(info.feature, is04?45:30);
+    if(nearby.length){
+      const title=is04?'ТП, от которой выходит линия 0,4 кВ':'Пересекаемые / близкие ТП';
+      const list=is04?nearby.slice(0,3):nearby.slice(0,40);
+      let ih=`<div class="section-title">${title}</div>`;
+      list.forEach(t=>{ ih+=`<a class="rel-link" data-id="${escapeHtml(t.id)}"><span class="rel-name">${escapeHtml(t.name)} · ${t.distance_m} м</span><span class="rel-id">${escapeHtml(t.id)}</span></a>`; });
+      body.innerHTML+=`<div class="section">${ih}</div>`;
     }
   }
 
-  // Actions + links
-  const links = extractLinks(props);
-  let actionsHtml = `
-    <div class="section">
-      <div class="section-title">Быстрые действия</div>
-      <div class="actions">
-        <button class="action-btn" id="btnCopyCoords">Копировать координаты</button>
-        <button class="action-btn" id="btnCopyData">Скопировать данные объекта</button>
-        <button class="action-btn" id="btnDownloadCard">Скачать таблицу карточки</button>`;
-  links.forEach((l, i) => {
-    actionsHtml += `<a class="action-btn link-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label)}</a>`;
-  });
-  actionsHtml += `</div></div>`;
-  body.innerHTML += actionsHtml;
+  // revealed 0.4 from this TP
+  if(info.isTP && state.revealed04.size){
+    let ih=`<div class="section-title">Линии 0,4 кВ от этой ТП</div>`;
+    state.revealed04.forEach(id=>{
+      ih+=`<a class="rel-link" data-id="${escapeHtml(id)}"><span class="rel-name">${escapeHtml(getDisplayName(id))}</span><span class="rel-id">${escapeHtml(id)}</span></a>`;
+    });
+    body.innerHTML+=`<div class="section">${ih}</div>`;
+  }
 
-  body.querySelectorAll('.rel-link').forEach(a => {
-    a.addEventListener('click', e => {
+  const links=extractLinks(props);
+  let actionsHtml=`<div class="section"><div class="section-title">Быстрые действия</div><div class="actions">
+    <button class="action-btn" id="btnCopyCoords">Копировать координаты</button>
+    <button class="action-btn" id="btnCopyData">Скопировать данные объекта</button>
+    <button class="action-btn" id="btnDownloadCard">Скачать таблицу карточки</button>`;
+  links.forEach(l=>{ actionsHtml+=`<a class="action-btn link-btn" href="${escapeHtml(l.url)}" target="_blank" rel="noopener">${escapeHtml(l.label)}</a>`; });
+  actionsHtml+=`</div></div>`;
+  body.innerHTML+=actionsHtml;
+
+  body.querySelectorAll('.rel-link').forEach(a=>{
+    a.addEventListener('click',e=>{
       e.preventDefault();
-      const id = a.getAttribute('data-id');
-      const target = featureIndex[id];
-      if (target) {
-        selectFeature(target);
-        const c = getCenter(target.feature.geometry);
-        if (c) map.flyTo(c, Math.max(map.getZoom(), 16), { duration: 0.55 });
-      } else showToast('Объект не найден');
+      const id=a.getAttribute('data-id');
+      const target=featureIndex[id];
+      if(target){ selectFeature(target); const c=getCenter(target.feature.geometry); if(c) map.flyTo(c,Math.max(map.getZoom(),16),{duration:.55}); }
+      else showToast('Объект не найден');
     });
   });
 
-  document.getElementById('btnCopyCoords').onclick = () => {
-    const c = getCenter(info.feature.geometry);
-    if (!c) return showToast('Нет координат');
-    copyText(c.lat.toFixed(6)+', '+c.lng.toFixed(6)).then(() => {
-      showToast('Координаты скопированы');
-      const b = document.getElementById('btnCopyCoords');
-      b.classList.add('copied'); b.textContent = 'Скопировано';
-      setTimeout(()=>{ b.classList.remove('copied'); b.textContent='Копировать координаты'; }, 1800);
-    });
+  document.getElementById('btnCopyCoords').onclick=()=>{
+    const c=getCenter(info.feature.geometry); if(!c) return showToast('Нет координат');
+    copyText(c.lat.toFixed(6)+', '+c.lng.toFixed(6)).then(()=>{ showToast('Координаты скопированы'); });
   };
-  document.getElementById('btnCopyData').onclick = () => {
-    let txt = 'ОБЪЕКТ: '+(props._source_name||'')+'\nID: '+(props._feature_id||'')+'\nТип: '+typeLabel+'\nНапряжение: '+(vLabel[info.voltage]||'')+'\n';
-    Object.keys(props).forEach(k => {
-      if (skip.has(k) || typeof props[k]==='object') return;
-      if (props[k]==null || (typeof props[k]==='string' && !String(props[k]).trim())) return;
-      txt += (labels[k]||k)+': '+String(props[k]).trim()+'\n';
-    });
+  document.getElementById('btnCopyData').onclick=()=>{
+    let txt='ОБЪЕКТ: '+(props._source_name||'')+'\nID: '+(props._feature_id||'')+'\n';
+    Object.keys(props).forEach(k=>{ if(skip.has(k)||typeof props[k]==='object') return; if(props[k]==null||!String(props[k]).trim()) return; txt+=(labels[k]||k)+': '+String(props[k]).trim()+'\n'; });
     copyText(txt).then(()=>showToast('Данные скопированы'));
   };
-  document.getElementById('btnDownloadCard').onclick = () => {
-    const rows = [['Поле','Значение']];
-    rows.push(['Название', props._source_name||'']);
-    rows.push(['ID', props._feature_id||'']);
-    rows.push(['Тип', typeLabel]);
-    rows.push(['Напряжение', vLabel[info.voltage]||'']);
-    rows.push(['Категория', props._object_category||'']);
-    rows.push(['Геометрия', info.feature.geometry ? info.feature.geometry.type : '']);
-    // ALL non-empty scalar props
-    Object.keys(props).sort().forEach(k => {
-      if (['_relations','gx_media_links','styleUrl'].includes(k)) return;
-      const v = props[k];
-      if (v==null || typeof v==='object') return;
-      if (typeof v==='string' && !v.trim()) return;
-      rows.push([k, String(v).trim()]);
-    });
-    // relations summary
-    if (props._relations) {
-      const r = props._relations;
-      if (r.supplied_by) rows.push(['Питается от', (r.supplied_by||[]).join(', ')]);
-      if (r.supplies) rows.push(['Питает', (r.supplies||[]).join(', ')]);
-      if (r.spatial_candidates) rows.push(['Близкие (ID)', (r.spatial_candidates||[]).map(c=>c.feature_id||c).join(', ')]);
-    }
-    const c = getCenter(info.feature.geometry);
-    if (c) rows.push(['Координаты', c.lat.toFixed(6)+', '+c.lng.toFixed(6)]);
-    const fname = (props._source_name||props._feature_id||'object').replace(/[\\/:*?"<>|]/g,'_').slice(0,50);
-    downloadCSV(fname+'.csv', rows);
+  document.getElementById('btnDownloadCard').onclick=()=>{
+    const rows=[['Поле','Значение']];
+    rows.push(['Название',props._source_name||''],['ID',props._feature_id||''],['Тип',typeLabel],['Напряжение',vLabel[info.voltage]||''],['Категория',props._object_category||''],['Геометрия',info.feature.geometry?info.feature.geometry.type:'']);
+    Object.keys(props).sort().forEach(k=>{ if(['_relations','gx_media_links','styleUrl'].includes(k)) return; const v=props[k]; if(v==null||typeof v==='object'||(typeof v==='string'&&!v.trim())) return; rows.push([k,String(v).trim()]); });
+    if(props._relations){ const r=props._relations; if(r.supplied_by) rows.push(['Питается от',(r.supplied_by||[]).join(', ')]); if(r.supplies) rows.push(['Питает',(r.supplies||[]).join(', ')]); }
+    const c=getCenter(info.feature.geometry); if(c) rows.push(['Координаты',c.lat.toFixed(6)+', '+c.lng.toFixed(6)]);
+    downloadCSV((props._source_name||props._feature_id||'object').replace(/[\\/:*?"<>|]/g,'_').slice(0,50)+'.csv', rows);
     showToast('Таблица карточки скачана');
   };
 
-  panel.classList.add('open');
+  document.getElementById('sidePanel').classList.add('open');
 }
 
-function closePanel() {
+function closePanel(){
   document.getElementById('sidePanel').classList.remove('open');
-  state.selectedId = null;
+  state.selectedId=null;
+  state.revealed04.clear();
   updateVisibility();
 }
 
-function makeTooltip(props, voltage, isTP) {
-  const name = props._source_name || props._feature_id || 'Объект';
-  const power = getPower(props);
-  if (power) return name + '  ·  ' + power;
-  return name;
-}
+function makeTooltip(props){ const name=props._source_name||props._feature_id||'Объект'; const power=getPower(props); return power? name+'  ·  '+power : name; }
 
-function processFeature(feature, idx) {
-  const props = feature.properties || {};
-  const geom = feature.geometry;
-  if (!geom || !geom.type) return;
-  const id = props._feature_id || ('AUTO_'+idx);
-  const voltage = detectVoltage(props, geom.type);
-  const tp = isTP(props, geom.type);
-  const feeders = extractFeeders(props);
-  const power = getPower(props);
-  const searchText = [
-    props._source_name, id, props.описание, props['Запитано от фидера'],
-    power, props['Год ввода'], props['На балансе'], props['Зав/Инв №'],
-    ...feeders
-  ].filter(Boolean).join(' ').toLowerCase();
+function processFeature(feature, idx){
+  const props=feature.properties||{};
+  const geom=feature.geometry; if(!geom||!geom.type) return;
+  const id=props._feature_id||('AUTO_'+idx);
+  const voltage=detectVoltage(props, geom.type);
+  const tp=isTP(props, geom.type);
+  const feeders=extractFeeders(props);
+  const power=getPower(props);
+  const searchText=[props._source_name,id,props.описание,props['Запитано от фидера'],power,props['Год ввода'],props['На балансе'],props['Зав/Инв №'],...feeders].filter(Boolean).join(' ').toLowerCase();
+  const info={ id, feature, voltage, isTP:tp, feeders, searchText, layer:null, hasGeo:hasSchema(props,'geo'), hasOpor:hasSchema(props,'opor') };
+  featureIndex[id]=info;
+  searchIndex.push({id, name:props._source_name||id, power, text:searchText});
 
-  const info = { id, feature, voltage, isTP: tp, feeders, searchText, layer: null };
-  featureIndex[id] = info;
-  searchIndex.push({ id, name: props._source_name || id, power, text: searchText });
-
-  let layer = null;
-  try {
-    if (geom.type === 'Point') {
-      const lat = geom.coordinates[1], lng = geom.coordinates[0];
-      layer = L.marker([lat,lng], {
-        icon: L.divIcon({ className:'', html:'<div class="tp-marker"></div>', iconSize:[8,8], iconAnchor:[4,4] }),
-        interactive: true
+  let layer=null;
+  try{
+    if(geom.type==='Point'){
+      const lat=geom.coordinates[1], lng=geom.coordinates[0];
+      layer=L.marker([lat,lng],{ icon:L.divIcon({className:'',html:'<div class="tp-marker"></div>',iconSize:[8,8],iconAnchor:[4,4]}), interactive:true });
+      layer.bindTooltip(makeTooltip(props),{direction:'top',offset:[0,-6],opacity:.95});
+      layer.on('click',()=>selectFeature(info));
+      layer.on('mouseover',()=>{ const el=layer.getElement(); if(el){ const m=el.querySelector('.tp-marker'); if(m) m.classList.add('hovered'); }});
+      layer.on('mouseout',()=>{ const el=layer.getElement(); if(el){ const m=el.querySelector('.tp-marker'); if(m) m.classList.remove('hovered'); }});
+      tpPoints.push({id, latlng:L.latLng(lat,lng), name:props._source_name||id});
+    } else if(geom.type==='LineString'||geom.type==='MultiLineString'){
+      layer=L.geoJSON(feature,{ style:()=>getLineStyle(voltage,{}), interactive:true });
+      layer.bindTooltip(makeTooltip(props),{sticky:true,direction:'top',opacity:.95});
+      layer.on('click',()=>selectFeature(info));
+      layer.on('mouseover',function(){ if(state.selectedId===info.id||state.revealed04.has(info.id)) return; this.setStyle(getLineStyle(voltage,{hovered:true})); });
+      layer.on('mouseout',function(){ if(state.selectedId===info.id||state.revealed04.has(info.id)) return; this.setStyle(getLineStyle(voltage,{})); });
+    } else if(geom.type==='Polygon'||geom.type==='MultiPolygon'){
+      layer=L.geoJSON(feature,{
+        style:{ color:tp?'#7c3aed':(voltage==='v110'?'#dc2626':voltage==='v35'?'#ea580c':'#2563eb'), weight:2, fillOpacity:.15, opacity:.85 },
+        interactive:true
       });
-      layer.bindTooltip(makeTooltip(props, voltage, true), { direction:'top', offset:[0,-6], opacity:0.95 });
-      layer.on('click', () => selectFeature(info));
-      layer.on('mouseover', () => { const el=layer.getElement(); if(el){ const m=el.querySelector('.tp-marker'); if(m) m.classList.add('hovered'); }});
-      layer.on('mouseout', () => { const el=layer.getElement(); if(el){ const m=el.querySelector('.tp-marker'); if(m) m.classList.remove('hovered'); }});
-      tpPoints.push({ id, latlng: L.latLng(lat,lng), name: props._source_name||id });
-    } else if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
-      layer = L.geoJSON(feature, { style: () => getLineStyle(voltage,{}), interactive:true });
-      layer.bindTooltip(makeTooltip(props, voltage, false), { sticky:true, direction:'top', opacity:0.95 });
-      layer.on('click', () => selectFeature(info));
-      layer.on('mouseover', function(){ if(state.selectedId===info.id) return; this.setStyle(getLineStyle(voltage,{hovered:true})); });
-      layer.on('mouseout', function(){ if(state.selectedId===info.id) return; this.setStyle(getLineStyle(voltage,{dimmed: state.feederFilter && !matchesFeeder(info)})); });
-    } else if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
-      layer = L.geoJSON(feature, {
-        style: {
-          color: tp ? '#7c3aed' : (voltage==='v110'?'#dc2626':voltage==='v35'?'#ea580c':'#2563eb'),
-          weight: 2, fillOpacity: 0.15, opacity: 0.85
-        },
-        interactive: true
-      });
-      layer.bindTooltip(makeTooltip(props, voltage, tp), { sticky:true, direction:'top', opacity:0.95 });
-      layer.on('click', () => selectFeature(info));
+      layer.bindTooltip(makeTooltip(props),{sticky:true,direction:'top',opacity:.95});
+      layer.on('click',()=>selectFeature(info));
     } else {
-      layer = L.geoJSON(feature, { style:{color:'#64748b',weight:2,fillOpacity:0.1} });
-      layer.on('click', () => selectFeature(info));
+      layer=L.geoJSON(feature,{style:{color:'#64748b',weight:2,fillOpacity:.1}});
+      layer.on('click',()=>selectFeature(info));
     }
-  } catch(err) { console.warn('skip', id, err); return; }
-  if (!layer) return;
-  info.layer = layer;
-  allLayers.push({ layer, info });
-  layerGroup.addLayer(layer);
+  }catch(err){ console.warn('skip',id,err); return; }
+  if(!layer) return;
+  info.layer=layer;
+  allLayers.push({layer,info});
+  // don't add 0.4 lines until revealed
+  if(!(voltage==='v04' && !state.forceShowAll04)) layerGroup.addLayer(layer);
 }
 
-// Load
 fetch('map.geojson')
-  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data => {
-    (data.features||[]).forEach((f,i) => processFeature(f,i));
+  .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data=>{
+    (data.features||[]).forEach((f,i)=>processFeature(f,i));
     let nTP=0,nLines=0,n110=0,n35=0,n10=0,n04=0;
-    allLayers.forEach(({info}) => {
+    allLayers.forEach(({info})=>{
       if(info.isTP) nTP++; else nLines++;
-      if(info.voltage==='v110') n110++;
-      else if(info.voltage==='v35') n35++;
-      else if(info.voltage==='v10') n10++;
-      else if(info.voltage==='v04') n04++;
+      if(info.voltage==='v110') n110++; else if(info.voltage==='v35') n35++; else if(info.voltage==='v10') n10++; else if(info.voltage==='v04') n04++;
     });
-    document.getElementById('statTotal').textContent = allLayers.length;
-    document.getElementById('statTP').textContent = nTP;
-    document.getElementById('statLines').textContent = nLines;
-    document.getElementById('stat110').textContent = n110;
-    document.getElementById('stat35').textContent = n35;
-    document.getElementById('stat10').textContent = n10;
-    document.getElementById('stat04').textContent = n04;
-
-    const feederSet = new Set();
-    allLayers.forEach(({info}) => info.feeders.forEach(f => feederSet.add(f)));
-    Array.from(feederSet).filter(Boolean).sort((a,b)=>a.localeCompare(b,'ru')).forEach(f => {
-      const o = document.createElement('option');
-      o.value = f; o.textContent = f.length>40 ? f.slice(0,38)+'…' : f;
-      document.getElementById('feederSelect').appendChild(o);
-    });
-
-    if (allLayers.length) {
-      try { map.fitBounds(L.featureGroup(allLayers.map(e=>e.layer)).getBounds().pad(0.08), {maxZoom:15}); } catch(e){}
-    }
-    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('statTotal').textContent=allLayers.length;
+    document.getElementById('statTP').textContent=nTP;
+    document.getElementById('statLines').textContent=nLines;
+    document.getElementById('stat110').textContent=n110;
+    document.getElementById('stat35').textContent=n35;
+    document.getElementById('stat10').textContent=n10;
+    document.getElementById('stat04').textContent=n04;
+    if(allLayers.length){ try{ map.fitBounds(L.featureGroup(allLayers.filter(e=>e.info.voltage!=='v04').map(e=>e.layer)).getBounds().pad(0.08),{maxZoom:15}); }catch(e){} }
+    document.getElementById('loadingMsg').style.display='none';
     updateVisibility();
   })
-  .catch(err => {
+  .catch(err=>{
     console.error(err);
-    const el = document.getElementById('loadingMsg');
-    el.classList.add('error');
-    el.textContent = 'Не удалось загрузить map.geojson. Проверьте, что файл находится рядом с index.html.';
+    const el=document.getElementById('loadingMsg'); el.classList.add('error');
+    el.textContent='Не удалось загрузить map.geojson. Проверьте, что файл находится рядом с index.html.';
   });
 
 // Search suggestions
-const searchInput = document.getElementById('searchInput');
-const sugBox = document.getElementById('suggestions');
-let sugItems = [];
-let sugActive = -1;
-
-function renderSuggestions(q) {
-  if (!q || q.length < 1) { sugBox.classList.remove('open'); return; }
-  const ql = q.toLowerCase();
-  const hits = searchIndex.filter(s => s.text.includes(ql)).slice(0, 12);
-  sugItems = hits;
-  sugActive = -1;
-  if (!hits.length) { sugBox.classList.remove('open'); return; }
-  sugBox.innerHTML = hits.map((h,i) => `
-    <div class="sug-item" data-idx="${i}">
-      <div class="sug-name">${escapeHtml(h.name)}</div>
-      <div class="sug-meta">${h.power ? escapeHtml(h.power)+' · ' : ''}${escapeHtml(h.id)}</div>
-    </div>
-  `).join('');
+const searchInput=document.getElementById('searchInput');
+const sugBox=document.getElementById('suggestions');
+let sugItems=[], sugActive=-1;
+function renderSuggestions(q){
+  if(!q){ sugBox.classList.remove('open'); return; }
+  const ql=q.toLowerCase();
+  const hits=searchIndex.filter(s=>s.text.includes(ql)).slice(0,12);
+  sugItems=hits; sugActive=-1;
+  if(!hits.length){ sugBox.classList.remove('open'); return; }
+  sugBox.innerHTML=hits.map((h,i)=>`<div class="sug-item" data-idx="${i}"><div class="sug-name">${escapeHtml(h.name)}</div><div class="sug-meta">${h.power?escapeHtml(h.power)+' · ':''}${escapeHtml(h.id)}</div></div>`).join('');
   sugBox.classList.add('open');
-  sugBox.querySelectorAll('.sug-item').forEach(el => {
-    el.addEventListener('mousedown', e => {
-      e.preventDefault();
-      const idx = +el.getAttribute('data-idx');
-      pickSuggestion(idx);
-    });
+  sugBox.querySelectorAll('.sug-item').forEach(el=>{
+    el.addEventListener('mousedown',e=>{ e.preventDefault(); pickSuggestion(+el.getAttribute('data-idx')); });
   });
 }
-function pickSuggestion(idx) {
-  const h = sugItems[idx];
-  if (!h) return;
-  sugBox.classList.remove('open');
-  searchInput.value = h.name;
-  state.searchQuery = '';
-  const info = featureIndex[h.id];
-  if (info) {
-    selectFeature(info);
-    const c = getCenter(info.feature.geometry);
-    if (c) map.flyTo(c, Math.max(map.getZoom(), 16), { duration: 0.5 });
-  }
+function pickSuggestion(idx){
+  const h=sugItems[idx]; if(!h) return;
+  sugBox.classList.remove('open'); searchInput.value=h.name; state.searchQuery='';
+  const info=featureIndex[h.id];
+  if(info){ selectFeature(info); const c=getCenter(info.feature.geometry); if(c) map.flyTo(c,Math.max(map.getZoom(),16),{duration:.5}); }
 }
-searchInput.addEventListener('input', () => {
-  renderSuggestions(searchInput.value.trim());
+searchInput.addEventListener('input',()=>renderSuggestions(searchInput.value.trim()));
+searchInput.addEventListener('keydown',e=>{
+  if(!sugBox.classList.contains('open')) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); sugActive=Math.min(sugActive+1,sugItems.length-1); highlightSug(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); sugActive=Math.max(sugActive-1,0); highlightSug(); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(sugActive>=0) pickSuggestion(sugActive); else if(sugItems.length) pickSuggestion(0); }
+  else if(e.key==='Escape') sugBox.classList.remove('open');
 });
-searchInput.addEventListener('keydown', e => {
-  if (!sugBox.classList.contains('open')) return;
-  if (e.key === 'ArrowDown') { e.preventDefault(); sugActive = Math.min(sugActive+1, sugItems.length-1); highlightSug(); }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); sugActive = Math.max(sugActive-1, 0); highlightSug(); }
-  else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (sugActive >= 0) pickSuggestion(sugActive);
-    else if (sugItems.length) pickSuggestion(0);
-  }
-  else if (e.key === 'Escape') sugBox.classList.remove('open');
-});
-function highlightSug() {
-  sugBox.querySelectorAll('.sug-item').forEach((el,i) => el.classList.toggle('active', i===sugActive));
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('.search-wrap')) sugBox.classList.remove('open');
-});
+function highlightSug(){ sugBox.querySelectorAll('.sug-item').forEach((el,i)=>el.classList.toggle('active',i===sugActive)); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.search-wrap')) sugBox.classList.remove('open'); });
 
-// Filters
-document.querySelectorAll('#legend input').forEach(cb => {
-  cb.addEventListener('change', () => {
-    const key = cb.getAttribute('data-filter');
-    if (key==='tp') state.tpFilter = cb.checked;
-    else state.voltageFilters[key] = cb.checked;
+document.querySelectorAll('#legend input').forEach(cb=>{
+  cb.addEventListener('change',()=>{
+    const key=cb.getAttribute('data-filter');
+    if(key==='tp') state.tpFilter=cb.checked;
+    else {
+      state.voltageFilters[key]=cb.checked;
+      if(key==='v04') state.forceShowAll04=cb.checked;
+    }
     updateVisibility();
   });
 });
-document.getElementById('feederSelect').addEventListener('change', e => {
-  state.feederFilter = e.target.value;
-  updateVisibility();
-});
-document.getElementById('btnShres').addEventListener('click', () => {
-  const btn = document.getElementById('btnShres');
-  if (state.balanceFilter === 'ШРЭС') {
-    state.balanceFilter = '';
-    btn.classList.remove('active');
-  } else {
-    state.balanceFilter = 'ШРЭС';
-    btn.classList.add('active');
+
+function toggleFilterBtn(btnId, key, value){
+  const btn=document.getElementById(btnId);
+  if(state[key]===value){ state[key]=''; btn.classList.remove('active'); }
+  else {
+    state[key]=value; btn.classList.add('active');
+    // exclusive for schema
+    if(key==='schemaFilter'){
+      ['btnGeoSchema','btnOpSchema'].forEach(id=>{ if(id!==btnId) document.getElementById(id).classList.remove('active'); });
+    }
   }
   updateVisibility();
-});
-document.getElementById('btnReset').addEventListener('click', () => {
-  state.voltageFilters = {v110:true,v35:true,v10:true,v04:true};
-  state.tpFilter = true;
-  state.feederFilter = '';
-  state.searchQuery = '';
-  state.balanceFilter = '';
-  state.selectedId = null;
-  document.querySelectorAll('#legend input').forEach(cb => cb.checked = true);
-  document.getElementById('feederSelect').value = '';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('btnShres').classList.remove('active');
-  sugBox.classList.remove('open');
-  closePanel();
-  if (allLayers.length) {
-    try { map.fitBounds(L.featureGroup(allLayers.map(e=>e.layer)).getBounds().pad(0.08),{maxZoom:15}); } catch(e){}
-  }
+}
+document.getElementById('btnShres').addEventListener('click',()=>{
+  const btn=document.getElementById('btnShres');
+  if(state.balanceFilter==='ШРЭС'){ state.balanceFilter=''; btn.classList.remove('active'); }
+  else { state.balanceFilter='ШРЭС'; btn.classList.add('active'); }
   updateVisibility();
 });
-document.getElementById('btnSat').addEventListener('click', () => {
-  state.isSat = !state.isSat;
-  const btn = document.getElementById('btnSat');
-  if (state.isSat) {
-    map.removeLayer(baseMap); baseSat.addTo(map);
-    btn.classList.add('active'); btn.textContent = 'Карта';
-  } else {
-    map.removeLayer(baseSat); baseMap.addTo(map);
-    btn.classList.remove('active'); btn.textContent = 'Спутник';
-  }
+document.getElementById('btnGeoSchema').addEventListener('click',()=>toggleFilterBtn('btnGeoSchema','schemaFilter','geo'));
+document.getElementById('btnOpSchema').addEventListener('click',()=>toggleFilterBtn('btnOpSchema','schemaFilter','opor'));
+
+document.getElementById('btnReset').addEventListener('click',()=>{
+  state.voltageFilters={v110:true,v35:true,v10:true,v04:false};
+  state.tpFilter=true; state.searchQuery=''; state.balanceFilter=''; state.schemaFilter='';
+  state.forceShowAll04=false; state.selectedId=null; state.revealed04.clear();
+  document.querySelectorAll('#legend input').forEach(cb=>{ cb.checked=cb.getAttribute('data-filter')!=='v04'; });
+  document.getElementById('searchInput').value='';
+  ['btnShres','btnGeoSchema','btnOpSchema'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  sugBox.classList.remove('open'); closePanel();
+  if(allLayers.length){ try{ map.fitBounds(L.featureGroup(allLayers.filter(e=>e.info.voltage!=='v04').map(e=>e.layer)).getBounds().pad(0.08),{maxZoom:15}); }catch(e){} }
+  updateVisibility();
 });
-document.getElementById('btnDownloadAll').addEventListener('click', () => {
-  const vLabel = {v110:'110 кВ',v35:'35 кВ',v10:'10 кВ',v04:'0,4 кВ'};
-  const rows = [['ID','Название','Категория','Напряжение','Геометрия','Мощность','Год ввода','Запитано от фидера','На балансе','Зав/Инв №','Описание']];
-  allLayers.forEach(({info}) => {
-    const p = info.feature.properties||{};
-    rows.push([
-      p._feature_id||'', p._source_name||'', p._object_category||'',
-      vLabel[info.voltage]||info.voltage,
-      info.feature.geometry?info.feature.geometry.type:'',
-      p['Ном.мощность, кВА']||'', p['Год ввода']||p['Дата']||'',
-      p['Запитано от фидера']||'', p['На балансе']||'', p['Зав/Инв №']||'',
-      (p.описание||'').replace(/\n/g,' ').slice(0,200)
-    ]);
+
+document.getElementById('btnSat').addEventListener('click',()=>{
+  state.isSat=!state.isSat;
+  const btn=document.getElementById('btnSat');
+  if(state.isSat){ map.removeLayer(baseMap); baseSat.addTo(map); btn.classList.add('active'); btn.textContent='Карта'; }
+  else { map.removeLayer(baseSat); baseMap.addTo(map); btn.classList.remove('active'); btn.textContent='Спутник'; }
+});
+
+document.getElementById('btnDownloadAll').addEventListener('click',()=>{
+  const vLabel={v110:'110 кВ',v35:'35 кВ',v10:'10 кВ',v04:'0,4 кВ'};
+  const rows=[['ID','Название','Категория','Напряжение','Геометрия','Мощность','Год ввода','Запитано от фидера','На балансе','Зав/Инв №','Описание']];
+  allLayers.forEach(({info})=>{
+    const p=info.feature.properties||{};
+    rows.push([p._feature_id||'',p._source_name||'',p._object_category||'',vLabel[info.voltage]||info.voltage,info.feature.geometry?info.feature.geometry.type:'',p['Ном.мощность, кВА']||'',p['Год ввода']||p['Дата']||'',p['Запитано от фидера']||'',p['На балансе']||'',p['Зав/Инв №']||'',(p.описание||'').replace(/\n/g,' ').slice(0,200)]);
   });
   downloadCSV('shieli_all_objects.csv', rows);
   showToast('Таблица всех объектов скачана');
 });
-document.getElementById('btnCalc').addEventListener('click', () => {
+
+document.getElementById('btnCalc').addEventListener('click',()=>{
   const P=+document.getElementById('calcP').value, U=+document.getElementById('calcU').value, cos=+document.getElementById('calcCos').value;
-  const out = document.getElementById('calcResult');
-  if (!P||!U||!cos||P<=0||U<=0||cos<=0) { out.textContent='Введите корректные значения'; return; }
-  const I = P / (Math.sqrt(3)*U*cos);
-  out.innerHTML = 'I = <b>'+I.toFixed(1)+'</b> А';
+  const out=document.getElementById('calcResult');
+  if(!P||!U||!cos||P<=0||U<=0||cos<=0){ out.textContent='Введите корректные значения'; return; }
+  out.innerHTML='I = <b>'+(P/(Math.sqrt(3)*U*cos)).toFixed(1)+'</b> А';
 });
+
 document.getElementById('panelClose').addEventListener('click', closePanel);
 
 })();
