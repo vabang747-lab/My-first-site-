@@ -153,7 +153,6 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 .prop-key { color: var(--muted); min-width: 110px; flex-shrink: 0; }
 .prop-val { word-break: break-word; flex: 1; }
 
-/* Улучшенные ссылки связей */
 .rel-link {
   display: flex; flex-direction: column; gap: 1px;
   padding: 8px 11px; margin: 4px 0; background: #f8fafc;
@@ -373,15 +372,49 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
     return Array.from(set).filter(Boolean);
   }
 
-  function getLineStyle(voltage, highlighted) {
-    const colors = { v110: '#dc2626', v35: '#ea580c', v10: '#2563eb', v04: '#16a34a' };
-    const weights = { v110: 6, v35: 5, v10: 3.5, v04: 2 };
-    const c = colors[voltage] || '#64748b';
-    const w = weights[voltage] || 3;
+  // ===== Улучшенные стили линий =====
+  function getLineStyle(voltage, opts = {}) {
+    const { selected = false, hovered = false, dimmed = false } = opts;
+
+    const colors = {
+      v110: '#dc2626',
+      v35:  '#ea580c',
+      v10:  '#2563eb',
+      v04:  '#16a34a'
+    };
+    const baseWeights = {
+      v110: 5.5,
+      v35:  4.5,
+      v10:  3.2,
+      v04:  2.2
+    };
+
+    let color = colors[voltage] || '#64748b';
+    let weight = baseWeights[voltage] || 3;
+    let opacity = 0.92;
+
+    if (selected) {
+      // Выделенная линия — заметно толще + ярче
+      weight = weight + 4;
+      opacity = 1;
+      // чуть осветляем цвет
+      if (voltage === 'v110') color = '#ef4444';
+      if (voltage === 'v35')  color = '#f97316';
+      if (voltage === 'v10')  color = '#3b82f6';
+      if (voltage === 'v04')  color = '#22c55e';
+    } else if (hovered) {
+      weight = weight + 2.5;
+      opacity = 1;
+    }
+
+    if (dimmed) {
+      opacity = 0.18;
+    }
+
     return {
-      color: c,
-      weight: highlighted ? w + 2 : w,
-      opacity: highlighted ? 1 : 0.9,
+      color,
+      weight,
+      opacity,
       lineCap: 'round',
       lineJoin: 'round'
     };
@@ -461,24 +494,31 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
 
       const isSelected = state.selectedId && info.id === state.selectedId;
       const feederMatch = !state.feederFilter || matchesFeeder(info);
-      const opacity = feederMatch ? 1 : 0.2;
+      const dimmed = !feederMatch;
 
       if (info.isTP) {
         const el = layer.getElement && layer.getElement();
         if (el) {
           const marker = el.querySelector('.tp-marker');
           if (marker) {
-            marker.style.opacity = opacity;
+            marker.style.opacity = dimmed ? 0.2 : 1;
             marker.classList.toggle('selected', !!isSelected);
           }
         }
       } else if (layer.setStyle) {
-        const st = getLineStyle(info.voltage, isSelected);
-        st.opacity = opacity * (isSelected ? 1 : 0.9);
-        if (isSelected) st.weight += 1.5;
+        // Для линий (и полигонов)
+        const st = getLineStyle(info.voltage, {
+          selected: isSelected,
+          dimmed: dimmed
+        });
         layer.setStyle(st);
+
+        // Поднимаем выделенную линию наверх
+        if (isSelected && layer.bringToFront) {
+          layer.bringToFront();
+        }
       } else if (layer.setOpacity) {
-        layer.setOpacity(opacity);
+        layer.setOpacity(dimmed ? 0.2 : 1);
       }
     });
   }
@@ -535,7 +575,6 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       body.innerHTML = '';
     }
 
-    // ===== Улучшенный блок СВЯЗИ =====
     const rel = props._relations;
     if (rel && typeof rel === 'object') {
       let relHtml = '';
@@ -574,7 +613,6 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
       }
     }
 
-    // Actions
     body.innerHTML += `
       <div class="section">
         <div class="section-title">Быстрые действия</div>
@@ -686,20 +724,18 @@ select.feeder-select:focus { border-color: var(--accent); background: #fff; }
         });
       } else if (geom.type === 'LineString' || geom.type === 'MultiLineString') {
         layer = L.geoJSON(feature, {
-          style: () => getLineStyle(voltage, false),
+          style: () => getLineStyle(voltage, {}),
           interactive: true
         });
         layer.on('click', () => selectFeature(info));
         layer.on('mouseover', function () {
           if (state.selectedId === info.id) return;
-          this.setStyle(getLineStyle(voltage, true));
+          this.setStyle(getLineStyle(voltage, { hovered: true }));
         });
         layer.on('mouseout', function () {
           if (state.selectedId === info.id) return;
           const feederMatch = !state.feederFilter || matchesFeeder(info);
-          const st = getLineStyle(voltage, false);
-          st.opacity = feederMatch ? 0.9 : 0.2;
-          this.setStyle(st);
+          this.setStyle(getLineStyle(voltage, { dimmed: !feederMatch }));
         });
       } else if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
         layer = L.geoJSON(feature, {
