@@ -17,7 +17,7 @@
 
         /* Боковая карточка данных справа */
         #sidebar {
-            width: 350px;
+            width: 360px;
             height: 100%;
             background: #ffffff;
             box-shadow: -2px 0 12px rgba(0,0,0,0.2);
@@ -50,6 +50,21 @@
         .attr-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; width: 40%; }
         .attr-table td { color: #1e293b; }
 
+        /* Стиль для ссылок в карточке */
+        .card-link {
+            display: inline-block;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            background-color: #2563eb;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .card-link:hover { background-color: #1d4ed8; }
+
         /* Панель управления и кнопка скачивания */
         .controls-panel {
             position: absolute;
@@ -77,7 +92,7 @@
         }
         .btn-download:hover { background-color: #0369a1; }
 
-        /* Требование 1: Уменьшенная точка ТП с аккуратным кольцом */
+        /* Уменьшенная точка ТП */
         .tp-double-ring {
             width: 8px;
             height: 8px;
@@ -88,7 +103,7 @@
             box-sizing: border-box;
         }
 
-        /* Стиль всплывающей плашки при наведении */
+        /* Стиль тултипа при наведении мыши */
         .leaflet-tooltip {
             font-size: 12px;
             font-weight: 600;
@@ -98,10 +113,6 @@
             border-radius: 4px;
             padding: 4px 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before,
-        .leaflet-tooltip-left:before, .leaflet-tooltip-right:before {
-            display: none;
         }
     </style>
 </head>
@@ -132,20 +143,19 @@
 <script>
     let geojsonData = null;
 
-    // Инициализация карты с Canvas для быстрой работы
     const map = L.map('map', { preferCanvas: true }).setView([44.17, 66.75], 11);
 
-    // Подложка OpenStreetMap
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: 'OpenStreetMap'
-    });
-
-    // Требование 5: Спутник Google (Гибрид: снимки + дороги и названия)
+    // Спутник Google (Гибрид)
     const googleSatLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
         maxZoom: 20,
         attribution: 'Google Maps Satellite'
     }).addTo(map);
+
+    // Схема OSM
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: 'OpenStreetMap'
+    });
 
     const baseMaps = {
         "🛰️ Google Спутник": googleSatLayer,
@@ -153,36 +163,71 @@
     };
     L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
-    // Требование 4: Стандартные цвета ВЛ по классам напряжения
+    // Требования 1, 2, 5: Логика цвета линий по их названиям
     function getVoltageColor(name) {
-        const text = (name || '').toLowerCase();
-        if (text.includes('110') || text.includes('110кв') || text.includes('110 кв')) return '#eab308'; // 110кВ - Желтый
-        if (text.includes('35') || text.includes('35кв') || text.includes('35 кв')) return '#dc2626';     // 35кВ - Красный
-        if (text.includes('10') || text.includes('10кв') || text.includes('10 кв')) return '#2563eb';     // 10кВ - Синий
-        if (text.includes('0.4') || text.includes('0,4') || text.includes('0.4кв')) return '#16a34a';    // 0.4кВ - Зеленый
-        return '#9333ea'; // Прочие / Неуказанные линии - Фиолетовый
+        const text = (name || '').trim().toLowerCase();
+
+        // 2. Только Л-101 — желтый (ВЛ-110 кВ)
+        if (text.includes('л-101') || text.includes('л 101')) {
+            return '#eab308'; // Желтый
+        }
+
+        // 1. Линии, начинающиеся на "ф." — синий (ВЛ-10 кВ)
+        if (text.startsWith('ф.') || text.startsWith('ф ')) {
+            return '#2563eb'; // Синий
+        }
+
+        // 5. Начинающиеся на "ВЛ-0,4кВ" или "ВЛ 0,4" — зеленый (ВЛ-0,4 кВ)
+        if (text.startsWith('вл-0,4кв') || text.startsWith('вл 0,4') || text.startsWith('вл-0.4кв') || text.startsWith('вл 0.4')) {
+            return '#16a34a'; // Зеленый
+        }
+
+        // Запасная проверка по общим ключевым словам
+        if (text.includes('110кв') || text.includes('110 кв')) return '#eab308';
+        if (text.includes('35кв') || text.includes('35 кв')) return '#dc2626';
+        if (text.includes('10кв') || text.includes('10 кв')) return '#2563eb';
+        if (text.includes('0,4кв') || text.includes('0.4кв')) return '#16a34a';
+
+        return '#dc2626'; // По умолчанию Красный (или остальной стандарт)
     }
 
-    // Иконка уменьшенной точки ТП
     const tpIcon = L.divIcon({
         className: 'tp-double-ring',
         iconSize: [8, 8],
         iconAnchor: [4, 4]
     });
 
-    // Список служебных KML/GeoJSON ключей для исключения
+    // Список исключаемых ключей (Требование 4: убран Label Scale)
     const ignoredKeys = new Set([
         'description', 'styleUrl', 'icon-opacity', 'icon-color', 'icon-scale', 
         'icon', 'fill-opacity', 'fill', 'stroke-opacity', 'stroke', 
-        'stroke-width', 'gx_media_links', 'styleHash', 'styleMapHash'
+        'stroke-width', 'styleHash', 'styleMapHash',
+        'label scale', 'label-scale', 'labelscale', 'label_scale'
     ]);
 
-    // Функция проверки, является ли ключ служебным
     function isUsefulProperty(key) {
-        return !ignoredKeys.has(key) && !key.startsWith('style') && !key.startsWith('icon');
+        const lowerKey = key.toLowerCase().trim();
+        if (ignoredKeys.has(lowerKey)) return false;
+        if (lowerKey.startsWith('style') || lowerKey.startsWith('icon')) return false;
+        return true;
     }
 
-    // Загрузка данных
+    // Вспомогательная функция для генерации кликабельной ссылки
+    function formatValueWithLinks(val) {
+        if (!val) return '';
+        const strVal = String(val);
+
+        // Если это ссылка на картинку или веб-страницу
+        if (strVal.startsWith('http://') || strVal.startsWith('https://')) {
+            // Если ссылок несколько через пробел или перевод строки
+            const urls = strVal.split(/\s+/);
+            return urls.map((url, idx) => 
+                `<a href="${url}" target="_blank" class="card-link">🔗 Открыть ссылку ${urls.length > 1 ? (idx + 1) : ''}</a>`
+            ).join('<br>');
+        }
+        return strVal;
+    }
+
     fetch('map.geojson')
         .then(res => res.json())
         .then(data => {
@@ -203,14 +248,13 @@
                 onEachFeature: function(feature, layer) {
                     const objName = feature.properties ? (feature.properties.name || 'Объект без названия') : 'Объект';
 
-                    // Требование 6: Отображение названия при простом наведении мыши (Tooltip)
+                    // Тултип при наведении мыши
                     layer.bindTooltip(objName, {
                         sticky: true,
                         direction: 'top',
                         offset: [0, -5]
                     });
 
-                    // Клик открывает очищенную карточку справа
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
                         openSidebar(feature.properties || {});
@@ -224,7 +268,7 @@
         })
         .catch(err => console.error('Ошибка загрузки GeoJSON:', err));
 
-    // Требование 2: Очищенная карточка с данными объекта
+    // Требование 3: Вывод данных объектов и обработка ссылок
     function openSidebar(props) {
         const sidebar = document.getElementById('sidebar');
         const titleEl = document.getElementById('sidebar-title');
@@ -236,12 +280,10 @@
         let hasData = false;
 
         for (let key in props) {
-            // Пропускаем имя (уже в заголовке) и все мусорные служебные ключи кода
             if (key !== 'name' && isUsefulProperty(key) && props[key] !== undefined && props[key] !== '') {
-                // Если значение это объект (бывает при сбоях экспорта KML), выводим понятный текст
-                let val = typeof props[key] === 'object' ? 'Указано в описании' : props[key];
+                let formattedVal = formatValueWithLinks(props[key]);
                 hasData = true;
-                tableHtml += `<tr><th>${key}</th><td>${val}</td></tr>`;
+                tableHtml += `<tr><th>${key}</th><td>${formattedVal}</td></tr>`;
             }
         }
         tableHtml += '</tbody></table>';
@@ -256,7 +298,7 @@
 
     map.on('click', closeSidebar);
 
-    // Требование 3: Скачивание таблицы только со служебной очисткой (только полезные параметры)
+    // Выгрузка CSV без Label Scale и служебных полей
     function downloadCSV() {
         if (!geojsonData || !geojsonData.features) {
             alert('Данные карты еще загружаются...');
@@ -265,9 +307,8 @@
 
         const features = geojsonData.features;
         const validKeys = new Set();
-        validKeys.add('name'); // Имя объекта первым столбцом
+        validKeys.add('name');
         
-        // Сбор только чистых пользовательских атрибутов
         features.forEach(f => {
             if (f.properties) {
                 Object.keys(f.properties).forEach(k => {
