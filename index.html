@@ -6,328 +6,622 @@
   <title>Карта ВЛ-0,4 кВ и ТП</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
     #map { width: 100%; height: 100%; }
 
-    /* Карточка popup */
-    .leaflet-popup-content-wrapper {
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    /* ===== Правая панель-карточка ===== */
+    #side-panel {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 340px;
+      max-height: calc(100% - 24px);
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: slideIn .35s ease;
     }
-    .leaflet-popup-content {
-      margin: 14px 16px;
-      min-width: 220px;
-      max-width: 320px;
-    }
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin: 0 0 8px;
-      line-height: 1.3;
-    }
-    .card-meta {
-      font-size: 13px;
-      color: #444;
-      line-height: 1.45;
-    }
-    .card-meta b { color: #222; }
-    .card-tag {
-      display: inline-block;
-      background: #e8f5e9;
-      color: #2e7d32;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 999px;
-      margin-top: 8px;
-    }
-    .card-tag.line {
-      background: #e3f2fd;
-      color: #1565c0;
+    #side-panel.visible { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(24px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
-    /* Подсказка сверху */
+    .panel-header {
+      background: linear-gradient(135deg, #01579B, #0288D1);
+      color: #fff;
+      padding: 16px 18px 14px;
+      position: relative;
+    }
+    .panel-header .close-btn {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(255,255,255,.2);
+      border: none;
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 28px;
+      text-align: center;
+    }
+    .panel-header .close-btn:hover { background: rgba(255,255,255,.35); }
+    .panel-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      padding-right: 32px;
+      word-break: break-word;
+    }
+    .panel-header .badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(255,255,255,.22);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .panel-body {
+      padding: 14px 18px 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .field {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: #333;
+    }
+    .field .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: #888;
+      margin-bottom: 2px;
+    }
+    .field .value { color: #1a1a1a; }
+
+    .links-block { margin-top: 14px; }
+    .links-block .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .link-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: #f5f8ff;
+      border: 1px solid #d0e0f7;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #1565c0;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background .15s, border-color .15s;
+    }
+    .link-btn:hover {
+      background: #e3f0ff;
+      border-color: #90caf9;
+    }
+    .link-btn .link-title {
+      display: block;
+      color: #0d47a1;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .link-btn .link-url {
+      display: block;
+      font-size: 11px;
+      color: #64b5f6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lines-info {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #2e7d32;
+      font-weight: 600;
+    }
+    .lines-info.empty {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    /* ===== Подсказка ===== */
     #hint {
       position: absolute;
       top: 12px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 1000;
-      background: rgba(255,255,255,.95);
+      z-index: 900;
+      background: rgba(255,255,255,.94);
       backdrop-filter: blur(8px);
-      padding: 10px 18px;
+      padding: 9px 18px;
       border-radius: 999px;
       box-shadow: 0 4px 16px rgba(0,0,0,.12);
-      font-size: 14px;
+      font-size: 13.5px;
       color: #333;
       pointer-events: none;
       transition: opacity .3s;
+      white-space: nowrap;
     }
-    #hint strong { color: #0d47a1; }
+    #hint strong { color: #01579B; }
 
-    /* Анимация линий */
-    .leaflet-interactive.line-animated {
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
-      animation: drawLine 1.1s ease-out forwards;
+    /* ===== Легенда ===== */
+    #legend {
+      position: absolute;
+      bottom: 24px;
+      left: 12px;
+      z-index: 900;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(8px);
+      padding: 10px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.12);
+      font-size: 12.5px;
+      color: #333;
+      line-height: 1.7;
     }
-    @keyframes drawLine {
-      to { stroke-dashoffset: 0; }
+    #legend .dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15);
     }
+    #legend .dot.has { background: #0F9D58; }
+    #legend .dot.no  { background: #90A4AE; }
+
+    /* ===== Анимация линий (медленное появление + бегущий пунктир) ===== */
+    .line-path {
+      stroke-dasharray: 14 10;
+      animation: dashMove 2.8s linear infinite, fadeInLine 2s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes fadeInLine {
+      0%   { opacity: 0; stroke-width: 1.5; }
+      50%  { opacity: 0.6; }
+      100% { opacity: 1; stroke-width: 4; }
+    }
+    @keyframes dashMove {
+      to { stroke-dashoffset: -48; }
+    }
+
+    /* Подписи фидеров */
+    .feeder-label {
+      background: #fff;
+      border: 1.5px solid #0F9D58;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1b5e20;
+      box-shadow: 0 2px 6px rgba(0,0,0,.12);
+      white-space: nowrap;
+      opacity: 0;
+      animation: labelAppear 0.6s ease 1.9s forwards;
+    }
+    @keyframes labelAppear {
+      to { opacity: 1; }
+    }
+
+    /* Tooltip Leaflet */
+    .leaflet-tooltip.point-tip {
+      background: #263238;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 3px 10px rgba(0,0,0,.25);
+    }
+    .leaflet-tooltip.point-tip::before { border-top-color: #263238; }
   </style>
 </head>
 <body>
-  <div id="hint">Нажмите на <strong>точку ТП</strong>, чтобы показать связанные линии</div>
+  <div id="hint">Нажмите на <strong>зелёную точку</strong>, чтобы показать линии</div>
+  <div id="legend">
+    <div><span class="dot has"></span>ТП с линиями ВЛ-0,4 кВ</div>
+    <div><span class="dot no"></span>ТП без линий</div>
+  </div>
   <div id="map"></div>
+
+  <div id="side-panel">
+    <div class="panel-header">
+      <button class="close-btn" id="close-panel" title="Закрыть">✕</button>
+      <h2 id="panel-title">—</h2>
+      <div class="badge" id="panel-badge">Трансформаторный пункт</div>
+    </div>
+    <div class="panel-body" id="panel-body"></div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ========== Карта ==========
-    const map = L.map('map', {
-      zoomControl: true,
-      attributionControl: true
-    }).setView([44.18, 66.70], 13);
+    // ==================== Карта ====================
+    const map = L.map('map', { zoomControl: true }).setView([44.18, 66.70], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // ========== Состояние ==========
-    let pointsLayer = null;
-    let allLines = [];          // все линии (скрыты)
-    let activePointId = null;   // id активной точки
-    let activeLineLayers = [];  // текущие видимые линии
+    // ==================== Состояние ====================
+    let allLines = [];
+    let activePointId = null;
+    let activeLineLayers = [];
+    let feederLabels = [];
 
-    // ========== Утилиты ==========
+    // ==================== Утилиты ====================
     function getProp(props, ...keys) {
       for (const k of keys) {
-        if (props[k] != null && props[k] !== '') return props[k];
+        if (props[k] != null && String(props[k]).trim() !== '') return String(props[k]);
       }
       return '';
     }
 
-    // Извлекаем ключи для сопоставления (номера + нормализованное имя)
-    function extractKeys(text) {
-      if (!text) return new Set();
-      const keys = new Set();
-      const t = String(text).replace(/\u00a0/g, ' ').trim();
+    function normalize(s) {
+      return String(s || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+    }
 
-      // Полное имя
-      keys.add(t.toLowerCase());
+    /** Главный номер ТП из названия (не путает с «10/0,4») */
+    function extractMainNumber(name) {
+      const n = normalize(name);
+      if (!n) return null;
+      // 1. Явный №XXX
+      let m = n.match(/№\s*(\d{2,4})\b/);
+      if (m) return m[1];
+      // 2. Число в начале: «610 КТПН…», «489 КТПБ…»
+      m = n.match(/^(\d{2,4})\b/);
+      if (m) return m[1];
+      // 3. Число в конце: «КТП-10/0,4 кВ 112»
+      m = n.match(/(?:кв|ктп[а-я()nнб]*|тп)\s+(\d{2,4})\s*$/i);
+      if (m) return m[1];
+      return null;
+    }
 
-      // Все номера вида №123 или просто 123 после ключевых слов
-      const nums = t.match(/(?:№\s*)?(\d{2,4})/g) || [];
-      nums.forEach(n => {
-        const clean = n.replace(/[^\d]/g, '');
-        if (clean) {
-          keys.add(clean);
-          keys.add('№' + clean);
-          keys.add('№ ' + clean);
+    /** Номер ТП, от которого идёт линия */
+    function getLineTpNumber(props) {
+      const name = normalize(getProp(props, 'Name', 'name'));
+      const desc = normalize(getProp(props, 'Description', 'description'));
+
+      // 1. «Запитано от: …»
+      let m = desc.match(/Запитано\s+от\s*:\s*([^<]+)/i);
+      if (m) {
+        const num = extractMainNumber(m[1]);
+        if (num) return num;
+      }
+      // 2. «от …» в названии
+      m = name.match(/от\s+(.+)$/i);
+      if (m) {
+        const num = extractMainNumber(m[1]);
+        if (num) return num;
+      }
+      // 3. № в названии
+      m = name.match(/№\s*(\d{2,4})\b/);
+      if (m) return m[1];
+      return null;
+    }
+
+    /** Номер фидера из описания */
+    function getFeeder(props) {
+      const desc = getProp(props, 'Description', 'description');
+      let m = desc.match(/Фидер\s*№?\s*([0-9иИ,\s\-–]+)/i);
+      if (m) return 'Фидер №' + m[1].trim();
+      return null;
+    }
+
+    /** Извлечь ссылки с названиями из описания */
+    function extractLinks(text) {
+      if (!text) return [];
+      const links = [];
+      const urlRe = /https?:\/\/[^\s<>"']+/gi;
+      const parts = text.split(/(?=https?:\/\/)/i);
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        const urlMatch = part.match(urlRe);
+        if (!urlMatch) continue;
+        const url = urlMatch[0].replace(/[.,;)\]]+$/, '');
+        let title = part.replace(urlRe, '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').trim();
+        title = title.replace(/[:：\s]+$/, '').trim();
+        if (!title && i > 0) {
+          title = parts[i - 1].replace(urlRe, '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ' ').trim();
+          title = title.replace(/[:：\s]+$/, '').trim();
+        }
+        if (!title || title.length < 2) {
+          if (/maps\.google|google\.com\/maps/i.test(url)) title = 'Гео-схема';
+          else if (/docs\.google|drawings/i.test(url)) title = 'Поопорная схема';
+          else if (/drive\.google/i.test(url)) title = 'Документ Google Drive';
+          else title = 'Открыть ссылку';
+        } else {
+          if (title.length > 60) title = title.slice(0, 57) + '…';
+        }
+        links.push({ title, url });
+      }
+      return links;
+    }
+
+    // ==================== Панель ====================
+    const panel = document.getElementById('side-panel');
+    const panelTitle = document.getElementById('panel-title');
+    const panelBadge = document.getElementById('panel-badge');
+    const panelBody = document.getElementById('panel-body');
+
+    document.getElementById('close-panel').onclick = () => {
+      hidePanel();
+      clearActive();
+    };
+
+    function hidePanel() {
+      panel.classList.remove('visible');
+    }
+
+    function showPointPanel(props, linesCount) {
+      const name = getProp(props, 'Name', 'name') || 'ТП';
+      panelTitle.textContent = name;
+      panelBadge.textContent = 'Трансформаторный пункт';
+
+      const fields = [
+        ['Ном. мощность', getProp(props, 'Ном.мощность, кВА')],
+        ['Год ввода', getProp(props, 'Год ввода')],
+        ['Запитано от фидера', getProp(props, 'Запитано от фидера')],
+        ['На балансе', getProp(props, 'На балансе')],
+        ['Зав / Инв №', getProp(props, 'Зав/Инв №')],
+      ];
+
+      let html = '';
+      fields.forEach(([label, val]) => {
+        if (val) {
+          html += `<div class="field"><div class="label">${label}</div><div class="value">${val}</div></div>`;
         }
       });
 
-      // Куски вида "КТПН-10/0,4 кВ №783"
-      const m = t.match(/(КТП[А-Яа-я()]*|ТП)[^№]*№?\s*(\d+)/i);
-      if (m) {
-        keys.add((m[1] + ' №' + m[2]).toLowerCase());
-        keys.add(('№' + m[2]).toLowerCase());
+      // Описание без картинок и ссылок
+      let desc = getProp(props, 'описание', 'Description', 'description');
+      desc = desc.replace(/<img[^>]*>/gi, '').replace(/https?:\/\/[^\s<]+/g, '').replace(/<br\s*\/?>/gi, '<br>').trim();
+      desc = desc.replace(/Ном\.мощность[\s\S]*?(?=<br>|$)/gi, '')
+                 .replace(/Год ввода[\s\S]*?(?=<br>|$)/gi, '')
+                 .replace(/Запитано от фидера[\s\S]*?(?=<br>|$)/gi, '')
+                 .replace(/На балансе[\s\S]*?(?=<br>|$)/gi, '')
+                 .replace(/Зав\/Инв №[\s\S]*?(?=<br>|$)/gi, '')
+                 .replace(/(<br>\s*)+/g, '<br>').replace(/^<br>|<br>$/g, '').trim();
+      if (desc && desc.length > 3) {
+        html += `<div class="field"><div class="label">Описание</div><div class="value">${desc}</div></div>`;
       }
 
-      return keys;
-    }
-
-    // Проверяем, относится ли линия к точке
-    function lineBelongsToPoint(lineProps, pointProps) {
-      const pointName = getProp(pointProps, 'Name', 'name');
-      const pointKeys = extractKeys(pointName);
-
-      const lineName = getProp(lineProps, 'Name', 'name');
-      const lineDesc = getProp(lineProps, 'Description', 'description');
-      const lineText = (lineName + ' ' + lineDesc).toLowerCase().replace(/\u00a0/g, ' ');
-
-      // Ищем совпадение по ключам точки в тексте линии
-      for (const k of pointKeys) {
-        if (k.length < 2) continue;
-        // Для коротких номеров требуем контекст "№" или "от"
-        if (/^\d{2,4}$/.test(k)) {
-          if (lineText.includes('№' + k) || lineText.includes('№ ' + k) ||
-              lineText.includes('от ' + k) || lineText.includes('кв №' + k) ||
-              lineText.includes('кв ' + k)) {
-            return true;
-          }
-        } else if (lineText.includes(k)) {
-          return true;
-        }
+      // Ссылки
+      const rawDesc = getProp(props, 'описание', 'Description', 'description');
+      const links = extractLinks(rawDesc);
+      if (links.length) {
+        html += `<div class="links-block"><div class="label">Ссылки</div>`;
+        links.forEach(l => {
+          html += `<a class="link-btn" href="${l.url}" target="_blank" rel="noopener">
+            <span class="link-title">${l.title}</span>
+            <span class="link-url">${l.url}</span>
+          </a>`;
+        });
+        html += `</div>`;
       }
-      return false;
-    }
 
-    // Красивая карточка для точки
-    function pointPopup(props) {
-      const name = getProp(props, 'Name', 'name') || 'ТП';
-      const power = getProp(props, 'Ном.мощность, кВА') || '';
-      const year = getProp(props, 'Год ввода') || '';
-      const feeder = getProp(props, 'Запитано от фидера') || '';
-      const balance = getProp(props, 'На балансе') || '';
-      const inv = getProp(props, 'Зав/Инв №') || '';
-      const desc = getProp(props, 'описание', 'Description', 'description') || '';
-
-      let html = `<div class="card-title">${name}</div><div class="card-meta">`;
-      if (power) html += `<div><b>Мощность:</b> ${power}</div>`;
-      if (year) html += `<div><b>Год ввода:</b> ${year}</div>`;
-      if (feeder) html += `<div><b>Фидер:</b> ${feeder}</div>`;
-      if (balance) html += `<div><b>На балансе:</b> ${balance}</div>`;
-      if (inv) html += `<div><b>Инв. №:</b> ${inv}</div>`;
-      if (desc && !desc.includes('<img') && desc.length < 200) {
-        html += `<div style="margin-top:6px">${desc.replace(/\n/g, '<br>')}</div>`;
+      if (linesCount > 0) {
+        html += `<div class="lines-info">Показано линий: ${linesCount}</div>`;
+      } else {
+        html += `<div class="lines-info empty">Связанных линий ВЛ-0,4 кВ нет</div>`;
       }
-      html += `</div><div class="card-tag">Трансформаторный пункт</div>`;
-      return html;
+
+      panelBody.innerHTML = html;
+      panel.classList.add('visible');
     }
 
-    // Карточка для линии
-    function linePopup(props) {
-      const name = getProp(props, 'Name', 'name') || 'Линия';
-      let desc = getProp(props, 'Description', 'description') || '';
-      // Убираем ссылки на google maps из описания для краткости
-      desc = desc.replace(/https?:\/\/[^\s<]+/g, '').replace(/<br\s*\/?>/gi, '<br>').trim();
-
-      let html = `<div class="card-title">${name}</div><div class="card-meta">`;
-      if (desc) html += `<div>${desc}</div>`;
-      html += `</div><div class="card-tag line">ВЛ-0,4 кВ</div>`;
-      return html;
-    }
-
-    // Скрыть все активные линии
-    function clearActiveLines() {
+    // ==================== Линии ====================
+    function clearActive() {
       activeLineLayers.forEach(l => map.removeLayer(l));
       activeLineLayers = [];
+      feederLabels.forEach(l => map.removeLayer(l));
+      feederLabels = [];
       activePointId = null;
+      document.getElementById('hint').style.opacity = '1';
     }
 
-    // Показать линии, связанные с точкой
-    function showLinesForPoint(pointFeature, pointLayer) {
-      const pointId = pointFeature.properties._id || pointFeature.id;
-      const pointProps = pointFeature.properties;
+    function midPoint(coords) {
+      if (!coords || coords.length < 2) return null;
+      const mid = Math.floor(coords.length / 2);
+      return [coords[mid][1], coords[mid][0]];
+    }
 
-      // Если кликнули ту же точку — скрываем
+    function showLinesForPoint(feature, layer) {
+      const pointId = feature.properties._id;
+      const props = feature.properties;
+      const num = extractMainNumber(getProp(props, 'Name', 'name'));
+
       if (activePointId === pointId) {
-        clearActiveLines();
-        map.closePopup();
-        document.getElementById('hint').style.opacity = '1';
+        clearActive();
+        hidePanel();
         return;
       }
 
-      clearActiveLines();
+      clearActive();
       activePointId = pointId;
 
-      const related = allLines.filter(lf => lineBelongsToPoint(lf.properties, pointProps));
+      // Строгое сопоставление только по номеру
+      const related = allLines.filter(lf => {
+        const lineNum = getLineTpNumber(lf.properties);
+        return lineNum && num && lineNum === num;
+      });
+
+      showPointPanel(props, related.length);
 
       if (related.length === 0) {
-        pointLayer.bindPopup(pointPopup(pointProps) +
-          '<div style="margin-top:8px;color:#c62828;font-size:13px">Связанных линий не найдено</div>'
-        ).openPopup();
+        document.getElementById('hint').style.opacity = '0.35';
         return;
       }
 
       related.forEach((lf, idx) => {
-        const layer = L.geoJSON(lf, {
+        const feeder = getFeeder(lf.properties);
+        const lineName = getProp(lf.properties, 'Name', 'name');
+
+        const geoLayer = L.geoJSON(lf, {
           style: {
             color: '#0F9D58',
             weight: 4,
-            opacity: 0.95,
+            opacity: 1,
             lineCap: 'round',
-            lineJoin: 'round'
+            lineJoin: 'round',
+            className: 'line-path'
           },
           onEachFeature: (f, l) => {
-            l.bindPopup(linePopup(f.properties));
-            // Анимация "рисования"
-            setTimeout(() => {
-              const path = l.getElement?.() || (l._path);
-              if (path) {
-                path.classList.add('line-animated');
-              }
-            }, 30 + idx * 80);
+            let popupHtml = `<b>${lineName}</b>`;
+            if (feeder) popupHtml += `<br>${feeder}`;
+            l.bindPopup(popupHtml);
           }
         }).addTo(map);
 
-        activeLineLayers.push(layer);
+        activeLineLayers.push(geoLayer);
+
+        // Подпись фидера после завершения анимации
+        setTimeout(() => {
+          try {
+            const coords = lf.geometry.coordinates;
+            let lineCoords = coords;
+            if (lf.geometry.type === 'MultiLineString') lineCoords = coords[0];
+            const mid = midPoint(lineCoords);
+            if (mid && feeder) {
+              const label = L.marker(mid, {
+                icon: L.divIcon({
+                  className: '',
+                  html: `<div class="feeder-label">${feeder}</div>`,
+                  iconSize: null,
+                  iconAnchor: [0, 0]
+                }),
+                interactive: false
+              }).addTo(map);
+              feederLabels.push(label);
+            }
+          } catch (e) {}
+        }, 1900 + idx * 120);
       });
 
-      // Подгоняем вид под точку + линии
-      const group = L.featureGroup([pointLayer, ...activeLineLayers]);
-      map.fitBounds(group.getBounds().pad(0.25), { maxZoom: 16, animate: true });
+      const group = L.featureGroup([layer, ...activeLineLayers]);
+      try {
+        map.fitBounds(group.getBounds().pad(0.3), { maxZoom: 16, animate: true, duration: 0.9 });
+      } catch (e) {}
 
-      pointLayer.bindPopup(
-        pointPopup(pointProps) +
-        `<div style="margin-top:8px;font-size:13px;color:#2e7d32">Показано линий: <b>${related.length}</b></div>`
-      ).openPopup();
-
-      document.getElementById('hint').style.opacity = '0.4';
+      document.getElementById('hint').style.opacity = '0.35';
     }
 
-    // ========== Загрузка данных ==========
+    // ==================== Загрузка ====================
     Promise.all([
       fetch('data/points.geojson').then(r => r.json()),
       fetch('data/lines.geojson').then(r => r.json())
     ]).then(([pointsData, linesData]) => {
 
-      // Сохраняем линии (пока не добавляем на карту)
       allLines = linesData.features.map((f, i) => {
         f.properties._id = 'line-' + i;
         return f;
       });
 
-      // Точки
+      // Номера ТП, у которых реально есть линии
+      const numsWithLines = new Set();
+      allLines.forEach(lf => {
+        const n = getLineTpNumber(lf.properties);
+        if (n) numsWithLines.add(n);
+      });
+
       pointsData.features.forEach((f, i) => {
         f.properties._id = 'point-' + i;
       });
 
-      pointsLayer = L.geoJSON(pointsData, {
+      L.geoJSON(pointsData, {
         pointToLayer: (feature, latlng) => {
-          return L.circleMarker(latlng, {
-            radius: 7,
-            fillColor: '#01579B',
+          const name = getProp(feature.properties, 'Name', 'name');
+          const num = extractMainNumber(name);
+          const hasLines = num && numsWithLines.has(num);
+
+          const marker = L.circleMarker(latlng, {
+            radius: hasLines ? 8 : 5,
+            fillColor: hasLines ? '#0F9D58' : '#90A4AE',
             color: '#fff',
-            weight: 2,
+            weight: hasLines ? 2.5 : 1.5,
             opacity: 1,
-            fillOpacity: 0.9
+            fillOpacity: hasLines ? 0.95 : 0.7
           });
+
+          // При наведении — только название
+          marker.bindTooltip(name, {
+            direction: 'top',
+            offset: [0, -8],
+            className: 'point-tip',
+            opacity: 0.95
+          });
+
+          return marker;
         },
         onEachFeature: (feature, layer) => {
+          const name = getProp(feature.properties, 'Name', 'name');
+          const num = extractMainNumber(name);
+          const hasLines = num && numsWithLines.has(num);
+
           layer.on('click', (e) => {
             L.DomEvent.stopPropagation(e);
             showLinesForPoint(feature, layer);
           });
 
-          // Hover-эффект
           layer.on('mouseover', () => {
-            layer.setStyle({ radius: 10, fillColor: '#0288D1' });
+            layer.setStyle({
+              radius: hasLines ? 11 : 7,
+              fillColor: hasLines ? '#00C853' : '#78909C'
+            });
           });
           layer.on('mouseout', () => {
-            layer.setStyle({ radius: 7, fillColor: '#01579B' });
+            layer.setStyle({
+              radius: hasLines ? 8 : 5,
+              fillColor: hasLines ? '#0F9D58' : '#90A4AE'
+            });
           });
         }
       }).addTo(map);
 
-      // Общий вид
-      if (pointsLayer.getLayers().length) {
-        map.fitBounds(pointsLayer.getBounds().pad(0.1));
-      }
+      const bounds = L.geoJSON(pointsData).getBounds();
+      if (bounds.isValid()) map.fitBounds(bounds.pad(0.08));
 
-      console.log('Точек:', pointsData.features.length, '| Линий:', allLines.length);
+      console.log('Точек:', pointsData.features.length,
+                  '| Линий:', allLines.length,
+                  '| ТП с линиями:', numsWithLines.size);
     }).catch(err => {
       console.error(err);
-      alert('Ошибка загрузки данных. Убедитесь, что файлы data/points.geojson и data/lines.geojson на месте.');
+      alert('Ошибка загрузки данных');
     });
 
-    // Клик по пустой карте — скрыть линии
     map.on('click', () => {
-      clearActiveLines();
-      document.getElementById('hint').style.opacity = '1';
+      clearActive();
+      hidePanel();
     });
   </script>
 </body>
